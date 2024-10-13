@@ -49,33 +49,43 @@ endforeach()
 
 
 
+# Target to ensure that after an executable is build, 
+# the ressources in the build folders are actualised.
+add_custom_target(copy_resources
+    COMMAND rsync -a --update --exclude='.gitkeep' ${CMAKE_SOURCE_DIR}/resources/ ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+# Function to add an executable for tests.
+function(add_test_executable TEST_NAME ...)
+    set(TEST_SOURCES ${ARGV})
+    list(REMOVE_AT TEST_SOURCES 0)
+    add_executable(${TEST_NAME} test/${TEST_NAME}.cpp ${TEST_SOURCES})
+    target_compile_options(${TEST_NAME} PRIVATE ${DEBUG_FLAGS})
+    target_link_libraries(${TEST_NAME} ${LIBRARIES})
+    add_dependencies(build_tests ${TEST_NAME})
+    add_custom_command(
+        TARGET run_tests
+        COMMAND ${CMAKE_COMMAND} -E echo "Running ${TEST_NAME}..."
+        COMMAND $<TARGET_FILE:${TEST_NAME}>
+        DEPENDS ${TEST_NAME}
+    )
+endfunction()
+
+
+
 # Add the main executable, with Release and Debug mode.
-if (NOT ${SOURCES} STREQUAL "") 
+if (SOURCES) 
     add_executable(${EXEC_NAME} ${SOURCES} ${HEADERS} ${TEMPLATES})
     target_link_libraries(${EXEC_NAME} ${LIBRARIES})
     target_compile_options(${EXEC_NAME} PRIVATE
         $<$<CONFIG:Debug>:${DEBUG_FLAGS}> 
         $<$<CONFIG:Release>:${RELEASE_FLAGS}>               
     )
+    add_dependencies(${EXEC_NAME} copy_resources)
 endif()
 
 # Add tests only for Debug mode.
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-
-    # Function to add an executable for tests.
-    function(add_test_executable ARG1 ...)
-        get_filename_component(TEST_NAME ${ARG1} NAME_WE)
-        add_executable(${TEST_NAME} ${ARGV})
-        target_compile_options(${TEST_NAME} PRIVATE ${DEBUG_FLAGS})
-        target_link_libraries(${TEST_NAME} ${LIBRARIES})
-        add_dependencies(build_tests ${TEST_NAME})
-        add_custom_command(
-            TARGET run_tests
-            COMMAND ${CMAKE_COMMAND} -E echo "Running ${TEST_NAME}..."
-            COMMAND $<TARGET_FILE:${TEST_NAME}>
-            DEPENDS ${TEST_NAME}
-        )
-    endfunction()
 
     # Add custom targets to build and run all tests.
     add_custom_target(
@@ -89,7 +99,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
     # Add each testing executable.
     foreach(TEST_FILE ${TESTS})
-        add_test_executable(${TEST_FILE} ${SOURCES_TESTS})
+        get_filename_component(TEST_NAME ${TEST_FILE} NAME_WE)
+        add_test_executable(${TEST_NAME} ${SOURCES_TESTS})
+        add_dependencies(${TEST_NAME} copy_resources)
     endforeach()
 
 endif()
@@ -101,6 +113,7 @@ add_custom_target(
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+# Add a rule to run the main executable.
 add_custom_target(
     run 
     COMMAND ./${EXEC_NAME}

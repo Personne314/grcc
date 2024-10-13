@@ -1,0 +1,63 @@
+%name
+regex
+
+%terminals
+litt
+int
+skip
+^
+$
+|
+(
+)
+[
+]
+{
+}
++
+*
+?
+-
+,
+
+%nonterminals
+Expr
+Begin
+End
+Union
+Concat
+Atom
+Quant
+Letter
+List
+Elt
+
+%axiom
+Expr
+
+%rules
+Expr -> Begin Union End
+Begin -> ^
+Begin ->
+End -> $
+End ->
+Union -> Concat
+Union -> Concat | Union
+Concat -> Atom
+Concat -> Atom Concat
+Atom -> ( Union ) Quant
+Atom -> Letter Quant
+Atom -> ( skip Union )
+Quant -> +
+Quant -> *
+Quant -> ?
+Quant -> { int }
+Quant -> { int , }
+Quant -> { int , int }
+Letter -> litt
+Letter -> [ List ]
+Letter -> [ ^ List ]
+List -> Elt
+List -> Elt List
+Elt -> litt
+Elt -> litt - litt
