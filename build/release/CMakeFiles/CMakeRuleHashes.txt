@@ -1,3 +1,4 @@
 # Hashes of file build rules.
 681a1c4f925d99b76cffdef562f319b2 CMakeFiles/build_root_makefile
-eb8ae07898460fbe396ff0d4662f4bf4 CMakeFiles/run
+025f8ff371d971d4fb97fe0344d7726e CMakeFiles/copy_resources
+edf1d9ec874ab8b4e88721749a4bae52 CMakeFiles/run

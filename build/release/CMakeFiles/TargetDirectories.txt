@@ -1,3 +1,5 @@
+/home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles/copy_resources.dir
+/home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles/grcc.dir
 /home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles/build_root_makefile.dir
 /home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles/run.dir
 /home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles/edit_cache.dir

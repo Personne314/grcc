@@ -67,7 +67,7 @@ include CMakeFiles/copy_resources.dir/compiler_depend.make
 include CMakeFiles/copy_resources.dir/progress.make
 
 CMakeFiles/copy_resources:
-	rsync -a --update --exclude='.gitkeep' /home/louis/Documents/Programmation/C++/grcc/resources/ /home/louis/Documents/Programmation/C++/grcc/build/debug
+	rsync -a --update --exclude=".gitkeep" --exclude="release/" --exclude="debug/" /home/louis/Documents/Programmation/C++/grcc/resources/ /home/louis/Documents/Programmation/C++/grcc/build/debug
 
 copy_resources: CMakeFiles/copy_resources
 copy_resources: CMakeFiles/copy_resources.dir/build.make

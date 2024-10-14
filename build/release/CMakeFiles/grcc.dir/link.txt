@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG CMakeFiles/grcc.dir/src/grammar.cpp.o -o grcc 

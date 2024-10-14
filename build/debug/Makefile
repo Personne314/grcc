@@ -130,17 +130,17 @@ copy_resources/fast:
 .PHONY : copy_resources/fast
 
 #=============================================================================
-# Target rules for targets named main
+# Target rules for targets named grcc
 
 # Build rule for target.
-main: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 main
-.PHONY : main
+grcc: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 grcc
+.PHONY : grcc
 
 # fast build rule for target.
-main/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/build
-.PHONY : main/fast
+grcc/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/build
+.PHONY : grcc/fast
 
 #=============================================================================
 # Target rules for targets named build_tests
@@ -212,7 +212,7 @@ src/grammar.o: src/grammar.cpp.o
 
 # target to build an object file
 src/grammar.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/grammar.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/grammar.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_grammar.dir/build.make CMakeFiles/test_grammar.dir/src/grammar.cpp.o
 .PHONY : src/grammar.cpp.o
 
@@ -221,7 +221,7 @@ src/grammar.i: src/grammar.cpp.i
 
 # target to preprocess a source file
 src/grammar.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/grammar.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/grammar.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_grammar.dir/build.make CMakeFiles/test_grammar.dir/src/grammar.cpp.i
 .PHONY : src/grammar.cpp.i
 
@@ -230,7 +230,7 @@ src/grammar.s: src/grammar.cpp.s
 
 # target to generate assembly for a file
 src/grammar.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/grammar.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/grammar.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_grammar.dir/build.make CMakeFiles/test_grammar.dir/src/grammar.cpp.s
 .PHONY : src/grammar.cpp.s
 
@@ -271,7 +271,7 @@ help:
 	@echo "... copy_resources"
 	@echo "... run"
 	@echo "... run_tests"
-	@echo "... main"
+	@echo "... grcc"
 	@echo "... test_grammar"
 	@echo "... src/grammar.o"
 	@echo "... src/grammar.i"

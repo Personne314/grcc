@@ -117,6 +117,32 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named copy_resources
+
+# Build rule for target.
+copy_resources: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 copy_resources
+.PHONY : copy_resources
+
+# fast build rule for target.
+copy_resources/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/copy_resources.dir/build.make CMakeFiles/copy_resources.dir/build
+.PHONY : copy_resources/fast
+
+#=============================================================================
+# Target rules for targets named grcc
+
+# Build rule for target.
+grcc: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 grcc
+.PHONY : grcc
+
+# fast build rule for target.
+grcc/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/build
+.PHONY : grcc/fast
+
+#=============================================================================
 # Target rules for targets named build_root_makefile
 
 # Build rule for target.
@@ -142,6 +168,30 @@ run/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/run.dir/build.make CMakeFiles/run.dir/build
 .PHONY : run/fast
 
+src/grammar.o: src/grammar.cpp.o
+.PHONY : src/grammar.o
+
+# target to build an object file
+src/grammar.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/grammar.cpp.o
+.PHONY : src/grammar.cpp.o
+
+src/grammar.i: src/grammar.cpp.i
+.PHONY : src/grammar.i
+
+# target to preprocess a source file
+src/grammar.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/grammar.cpp.i
+.PHONY : src/grammar.cpp.i
+
+src/grammar.s: src/grammar.cpp.s
+.PHONY : src/grammar.s
+
+# target to generate assembly for a file
+src/grammar.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/grammar.cpp.s
+.PHONY : src/grammar.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -151,7 +201,12 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... build_root_makefile"
+	@echo "... copy_resources"
 	@echo "... run"
+	@echo "... grcc"
+	@echo "... src/grammar.o"
+	@echo "... src/grammar.i"
+	@echo "... src/grammar.s"
 .PHONY : help
 
 

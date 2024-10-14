@@ -1,1 +1,1 @@
-/usr/bin/c++ -g CMakeFiles/test_grammar.dir/test/test_grammar.cpp.o CMakeFiles/test_grammar.dir/src/grammar.cpp.o -o test_grammar  -lm 
+/usr/bin/c++ -g CMakeFiles/test_grammar.dir/test/test_grammar.cpp.o CMakeFiles/test_grammar.dir/src/grammar.cpp.o -o test_grammar 

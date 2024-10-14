@@ -63,7 +63,7 @@ CMAKE_BINARY_DIR = /home/louis/Documents/Programmation/C++/grcc/build/release
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all:
+all: CMakeFiles/grcc.dir/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
@@ -71,9 +71,63 @@ preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
+clean: CMakeFiles/copy_resources.dir/clean
+clean: CMakeFiles/grcc.dir/clean
 clean: CMakeFiles/build_root_makefile.dir/clean
 clean: CMakeFiles/run.dir/clean
 .PHONY : clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/copy_resources.dir
+
+# All Build rule for target.
+CMakeFiles/copy_resources.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/copy_resources.dir/build.make CMakeFiles/copy_resources.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/copy_resources.dir/build.make CMakeFiles/copy_resources.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles --progress-num= "Built target copy_resources"
+.PHONY : CMakeFiles/copy_resources.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/copy_resources.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles 0
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/copy_resources.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles 0
+.PHONY : CMakeFiles/copy_resources.dir/rule
+
+# Convenience name for target.
+copy_resources: CMakeFiles/copy_resources.dir/rule
+.PHONY : copy_resources
+
+# clean rule for target.
+CMakeFiles/copy_resources.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/copy_resources.dir/build.make CMakeFiles/copy_resources.dir/clean
+.PHONY : CMakeFiles/copy_resources.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/grcc.dir
+
+# All Build rule for target.
+CMakeFiles/grcc.dir/all: CMakeFiles/copy_resources.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles --progress-num=1,2 "Built target grcc"
+.PHONY : CMakeFiles/grcc.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/grcc.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/grcc.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles 0
+.PHONY : CMakeFiles/grcc.dir/rule
+
+# Convenience name for target.
+grcc: CMakeFiles/grcc.dir/rule
+.PHONY : grcc
+
+# clean rule for target.
+CMakeFiles/grcc.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/clean
+.PHONY : CMakeFiles/grcc.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/build_root_makefile.dir
@@ -105,7 +159,7 @@ CMakeFiles/build_root_makefile.dir/clean:
 # Target rules for target CMakeFiles/run.dir
 
 # All Build rule for target.
-CMakeFiles/run.dir/all:
+CMakeFiles/run.dir/all: CMakeFiles/grcc.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/run.dir/build.make CMakeFiles/run.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/run.dir/build.make CMakeFiles/run.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles --progress-num= "Built target run"
@@ -113,7 +167,7 @@ CMakeFiles/run.dir/all:
 
 # Build rule for subdir invocation for target.
 CMakeFiles/run.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles 2
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/run.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles 0
 .PHONY : CMakeFiles/run.dir/rule

@@ -27,8 +27,8 @@ cmake_minimum_required(VERSION 3.28.3)
 project(CppProjectTemplate LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(EXEC_NAME "main")
-set(LIBRARIES m)
+set(EXEC_NAME "grcc")
+# set(LIBRARIES )
 set(DEBUG_FLAGS -g -Wall -Wextra)
 set(RELEASE_FLAGS -O3)
 
@@ -51,9 +51,26 @@ endforeach()
 
 # Target to ensure that after an executable is build, 
 # the ressources in the build folders are actualised.
-add_custom_target(copy_resources
-    COMMAND rsync -a --update --exclude='.gitkeep' ${CMAKE_SOURCE_DIR}/resources/ ${CMAKE_CURRENT_BINARY_DIR}
-)
+if(CMAKE_BUILD_TYPE STREQUAL "Release" AND EXISTS ${CMAKE_SOURCE_DIR}/resources/release)
+    add_custom_target(copy_resources
+        COMMAND rsync -a --update --exclude=".gitkeep" --exclude="release/" --exclude="debug/" 
+            ${CMAKE_SOURCE_DIR}/resources/ ${CMAKE_CURRENT_BINARY_DIR}
+        COMMAND rsync -a --update --exclude=".gitkeep" 
+            ${CMAKE_SOURCE_DIR}/resources/release/ ${CMAKE_CURRENT_BINARY_DIR}
+    )
+elseif(CMAKE_BUILD_TYPE STREQUAL "Debug" AND EXISTS ${CMAKE_SOURCE_DIR}/resources/debug)
+    add_custom_target(copy_resources
+        COMMAND rsync -a --update --exclude=".gitkeep" --exclude="release/" --exclude="debug/" 
+            ${CMAKE_SOURCE_DIR}/resources/ ${CMAKE_CURRENT_BINARY_DIR}
+        COMMAND rsync -a --update --exclude=".gitkeep" 
+            ${CMAKE_SOURCE_DIR}/resources/debug/ ${CMAKE_CURRENT_BINARY_DIR}
+    )
+else()
+    add_custom_target(copy_resources
+        COMMAND rsync -a --update --exclude=".gitkeep" --exclude="release/" --exclude="debug/" 
+            ${CMAKE_SOURCE_DIR}/resources/ ${CMAKE_CURRENT_BINARY_DIR}
+    )
+endif()
 
 # Function to add an executable for tests.
 function(add_test_executable TEST_NAME ...)
@@ -69,6 +86,7 @@ function(add_test_executable TEST_NAME ...)
         COMMAND $<TARGET_FILE:${TEST_NAME}>
         DEPENDS ${TEST_NAME}
     )
+    add_dependencies(${TEST_NAME} copy_resources)
 endfunction()
 
 

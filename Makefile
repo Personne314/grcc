@@ -25,8 +25,8 @@ depend:
 copy_resources:
 	make -s -C build/debug copy_resources
 
-main:
-	make -s -C build/debug main
+grcc:
+	make -s -C build/debug grcc
 
 build_tests:
 	make -s -C build/debug build_tests
