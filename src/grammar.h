@@ -8,6 +8,8 @@
 
 
 
+
+
 // Struct used to modelize grammar rules such as :
 // symbol -> derivate.
 struct Rule {
@@ -132,3 +134,32 @@ private:
 	std::vector<Rule> m_rules;
 
 };
+
+
+
+
+
+// Calculate firsts list of a sequence of symbols.
+void vectorFirst(const std::vector<bool> &eps, const std::vector<std::set<int>> &first,
+	std::vector<int>::const_iterator begin, std::vector<int>::const_iterator end, std::set<int> &res);
+
+// Calculate the rules to delete in case of an inferior reduce.
+void inferiorReduce(const std::vector<bool> &terminals,const std::vector<Rule> &rules,
+	std::vector<bool> &inf_symbols);
+
+// Calculate the rules to delete in case of a superior reduce.
+void superiorReduce(int axiom, const std::vector<bool> &terminals, const std::vector<Rule> &rules, 
+	std::vector<bool> &sup_symbols);
+
+// Delete immadiate left recursion.
+void derec_immadiate(const std::string &name, std::vector<std::set<Rule>>& rules, int rules_id,
+	std::vector<std::string>& res_symbols, std::vector<bool>& res_terminals);
+
+// Replace all rules Ai -> Aj b, where Aj -> a1 | ... | an, by Ai -> a1 b | ... | an b
+// for all Aj < Ai.
+void derec_update_rules(const std::vector<std::set<Rule>> &rules,
+	const std::vector<bool> &terminals, std::set<Rule> &res_rules);
+
+// Return the length of the longest common prefix of at least two of the 
+// derivate part of the rules contained in words.
+int commonPrefix(const std::vector<Rule> &words, std::vector<bool> &eq_class);

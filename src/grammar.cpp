@@ -28,7 +28,7 @@ enum GrammarParserState {
 
 
 
-// Calculate firsts lisr of a sequence of symbols.
+// Calculate firsts list of a sequence of symbols.
 // eps : epsilon-derivable symbols indicator.
 // first : firsts lists of symbols.
 // begin, end : boundaries of the sequence.
@@ -254,7 +254,7 @@ int commonPrefix(const vector<Rule> &words, vector<bool> &eq_class) {
 	const int n = words.size();
 	if (!n) return 0;
 
-	// Initialise the length of the prefix, and the result equivalence class
+	// Initialize the length of the prefix, and the result equivalence class
 	// containing the rules starting with the prefix.
 	std::size_t len = -1;
 	eq_class = vector<bool>(n, true);
@@ -275,7 +275,7 @@ int commonPrefix(const vector<Rule> &words, vector<bool> &eq_class) {
 
 		// Put the rules ids in sets depending of the current classes.
 		vector<set<int>> old_classes(nb_classes, set<int>());
-		for (int i = 0; i < classes[i]; ++i) {
+		for (std::size_t i = 0; i < classes.size(); ++i) {
 			if (classes[i] < 0) continue;
 			old_classes[classes[i]].insert(i);
 		}
@@ -309,7 +309,11 @@ int commonPrefix(const vector<Rule> &words, vector<bool> &eq_class) {
 		// less than two elements to remove it.
 		int j = 0;
 		vector<int> count(nb_classes, 0);
-		for (int c : classes) ++count[c];
+		for (int c : classes) {
+			if (c < 0) continue;
+			std::cout << count.size() << " " << nb_classes << " " << c <<endl;
+			++count[c];
+		}
 		for (int &nb : count) {
 			if (nb > 1) nb = j++;
 			else nb = -1;
@@ -658,6 +662,7 @@ void Grammar::reduce() {
 	// Get inferior reduce to-be-removed symbols.
 	vector<bool> inf_symbols;
 	inferiorReduce(m_terminals, m_rules, inf_symbols);
+	std::cout << inf_symbols.size() << " " << m_axiom << endl;
 	if (inf_symbols[m_axiom]) {
 		cerr << "grcc: \e[0;31merror:\e[0;0m axiom was removed during grammar "
 			 << "inferior reduction\n" << endl;
@@ -713,8 +718,6 @@ void Grammar::derec() {
 // Factorization operation.
 void Grammar::fact() {
 
-	cout<<"FACT"<<endl;
-
 	// Copy and sort rules.
 	vector<vector<Rule>> rules(m_terminals.size(), vector<Rule>());
 	for (const Rule &rule : m_rules) rules[rule.symbol].push_back(rule);
@@ -723,14 +726,9 @@ void Grammar::fact() {
 	// For each rules that have a common initial symbol.
 	for (std::size_t k = 0; k < rules.size(); ++k) {
 		auto& current_rules = rules[k];
-		if (!current_rules.size()) continue;
+		if (current_rules.size() < 2) continue;
 		const int symbol = current_rules[0].symbol;
 		int fact_id = 1;
- 
-		cout << "symbol: " << m_symbols[symbol] << endl;
-		for (const Rule& rule : current_rules) {
-			rule.print(m_symbols);
-		}
 
  		// Search for a factorization.
 		int length;
