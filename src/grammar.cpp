@@ -427,6 +427,7 @@ void LLkTable::print(const Grammar &grammar, std::ostream &str) const {
 	const vector<string> &symbols = grammar.getSymbols();
 	const vector<Rule> &rules = grammar.getRules();
 	str << "[LLkTable]" << endl;
+	str << "This grammar is " << (isLL1() ? "LL(1)" : "not LL(1)") << endl;
 
 	// For each non-terminal, print it.
 	for (std::size_t i = 0; i < m_nonterminals.size(); ++i) {
@@ -641,16 +642,16 @@ void Grammar::print(std::ostream &str) const {
 	}
 	
 	// Print non-terminals.
-	str << "Non-Terminals:\n";
+	str << "\nNon-Terminals:\n";
 	for (std::size_t i = 0; i < m_terminals.size(); ++i) {
 		if (!m_terminals[i]) str << m_symbols[i] << '\n';
 	}
 
 	// Print the axiom.
-	str << "Axiom:\n" << m_symbols[m_axiom] << '\n';
+	str << "\nAxiom:\n" << m_symbols[m_axiom] << '\n';
 	
 	// Print the rules.
-	str << "Rules:\n";
+	str << "\nRules:\n";
 	for (const Rule &rule : m_rules) rule.print(m_symbols, str);
 
 }
