@@ -1,0 +1,24 @@
+%name
+grammar fact
+
+%terminals
+a
+b
+c
+d
+
+%nonterminals
+X
+Y
+Z
+
+%axiom
+X
+
+%rules
+X -> a Y b X
+X -> a Y b X d Z
+X -> a
+Y -> b c Z
+Y -> b c a
+Z -> c d

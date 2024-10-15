@@ -12,7 +12,7 @@
 
 // Usings.
 using std::vector, std::string, std::stringstream, std::set, std::unordered_map;
-using std::cout, std::cerr, std::endl;
+using std::cerr, std::endl;
 
 
 
@@ -161,7 +161,7 @@ void derec_immadiate(const string &name, vector<set<Rule>>& rules, int rules_id,
 
 	// Add a new non-terminal to derecursivate the rules.
 	set<Rule> new_rules;
-	res_symbols.push_back(name + "_bis");
+	res_symbols.push_back(name + "_rec");
 	res_terminals.push_back(0);
 
 	// For each rule.
@@ -207,13 +207,14 @@ void derec_update_rules(const vector<set<Rule>> &rules,
 
 	// Copy the rules and clear res_rules.
 	set<Rule> current_rules(res_rules);
-	res_rules.clear();
 
 	// While we're not in a stable state, loop over the rules.
 	bool changed;
 	do {
+		res_rules.clear();
 		changed = false;
 		for (const Rule &current_rule : current_rules) {
+
 			const vector<int> &deriv = current_rule.derivate;
 			const int symbol = current_rule.symbol;
 
@@ -267,7 +268,7 @@ int commonPrefix(const vector<Rule> &words, vector<bool> &eq_class) {
 	// While there is still classes that can be found, try to add one letter.
 	while (nb_classes > 0) {
 		++len;
-
+		
 		// Update the previous result class.
 		for (int i = 0; i < n; ++i) {
 			eq_class[i] = classes[i] == 0;
@@ -289,16 +290,14 @@ int commonPrefix(const vector<Rule> &words, vector<bool> &eq_class) {
 				// If the id words is too short, remove it from each classes.
 				if (words[id].derivate.size() <= len) classes[id] = -1;
 				else {
-
 					// Else if the word isn't equivalent to any of the
 					// previous words, add a new class.
-					if (new_classes.find(words[id].derivate[id]) == new_classes.end()) {
-						new_classes[words[id].derivate[id]] = nb_classes + new_classes.size();
-						++nb_classes;
+					if (new_classes.find(words[id].derivate[len]) == new_classes.end()) {
+						new_classes[words[id].derivate[len]] = nb_classes++;
 					}
 
 					// Then, add the word to it's correct class.
-					classes[id] = new_classes[words[id].derivate[id]];
+					classes[id] = new_classes[words[id].derivate[len]];
 
 				}
 
@@ -311,9 +310,10 @@ int commonPrefix(const vector<Rule> &words, vector<bool> &eq_class) {
 		vector<int> count(nb_classes, 0);
 		for (int c : classes) {
 			if (c < 0) continue;
-			std::cout << count.size() << " " << nb_classes << " " << c <<endl;
 			++count[c];
 		}
+
+		// Calculate the new classes ids.
 		for (int &nb : count) {
 			if (nb > 1) nb = j++;
 			else nb = -1;
@@ -662,7 +662,6 @@ void Grammar::reduce() {
 	// Get inferior reduce to-be-removed symbols.
 	vector<bool> inf_symbols;
 	inferiorReduce(m_terminals, m_rules, inf_symbols);
-	std::cout << inf_symbols.size() << " " << m_axiom << endl;
 	if (inf_symbols[m_axiom]) {
 		cerr << "grcc: \e[0;31merror:\e[0;0m axiom was removed during grammar "
 			 << "inferior reduction\n" << endl;
@@ -736,24 +735,8 @@ void Grammar::fact() {
 		do {
 
 			// Get the longest common prefix.
-			std::cout << "begin" << endl;
 			length = commonPrefix(current_rules, eq_class);
-			std::cout << "end" << endl;
-
-			cout <<length <<endl;
-			cout << eq_class.size() << endl <<": ";
-			for (bool b : eq_class) {
-				cout << b << " ";
-			}
-			cout << endl;
-
-
 			if (!length) break;
-
-
-			cout << eq_class.size() << endl;
-			for (bool b : eq_class) cout << (b?"1":"0") << " ";
-			cout << endl;
 
 			// Get a rule containing the prefix.
 			int elt = 0;
@@ -763,8 +746,6 @@ void Grammar::fact() {
 			// Build the new rules and the factorization rule.
 			vector<Rule> new_rules({Rule(symbol, vector<int>())});
 			vector<int>& fact_deriv = new_rules[0].derivate;
-
-			std::cout << length << " " << deriv.size() << endl;
 
 			fact_deriv.insert(
 				fact_deriv.begin(),

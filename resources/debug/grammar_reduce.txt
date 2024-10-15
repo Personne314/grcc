@@ -1,0 +1,44 @@
+%name
+grammar reduce
+
+%terminals
+a
+b
+
+%nonterminals
+A
+V
+U
+B
+C
+W
+X
+Y
+Z
+
+%axiom
+A
+
+%rules
+A -> A V
+A -> V
+A -> U
+V -> b V
+V -> a C X
+V ->
+U -> b U
+U -> a b W
+U ->
+B -> a b U
+B -> b W
+B -> a
+C -> b V
+C -> U C
+W -> b U X
+W -> V U C
+X -> a X U
+X -> b V Y Z
+Y -> a Y b
+Y -> a W
+Z -> X U
+Z -> a Z Y

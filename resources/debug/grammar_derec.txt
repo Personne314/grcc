@@ -1,0 +1,26 @@
+%name
+grammar derec
+
+%terminals
+a
+b
+c
+d
+e
+f
+
+%nonterminals
+A
+B
+C
+
+%axiom
+A
+
+%rules
+A -> B a
+A -> C b
+B -> A c
+B -> d
+C -> A e
+C -> f
