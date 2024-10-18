@@ -114,12 +114,12 @@ CMakeFiles/copy_resources.dir/clean:
 CMakeFiles/grcc.dir/all: CMakeFiles/copy_resources.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles --progress-num=1,2 "Built target grcc"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles --progress-num=1,2,3,4 "Built target grcc"
 .PHONY : CMakeFiles/grcc.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/grcc.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 2
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 4
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/grcc.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 0
 .PHONY : CMakeFiles/grcc.dir/rule
@@ -145,7 +145,7 @@ CMakeFiles/build_tests.dir/all: CMakeFiles/test_grammar.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/build_tests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 3
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 4
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/build_tests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 0
 .PHONY : CMakeFiles/build_tests.dir/rule
@@ -171,7 +171,7 @@ CMakeFiles/run_tests.dir/all: CMakeFiles/test_grammar.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/run_tests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 3
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 4
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/run_tests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 0
 .PHONY : CMakeFiles/run_tests.dir/rule
@@ -192,12 +192,12 @@ CMakeFiles/run_tests.dir/clean:
 CMakeFiles/test_grammar.dir/all: CMakeFiles/copy_resources.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_grammar.dir/build.make CMakeFiles/test_grammar.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_grammar.dir/build.make CMakeFiles/test_grammar.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles --progress-num=3,4,5 "Built target test_grammar"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles --progress-num=5,6,7,8 "Built target test_grammar"
 .PHONY : CMakeFiles/test_grammar.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_grammar.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 3
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 4
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_grammar.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 0
 .PHONY : CMakeFiles/test_grammar.dir/rule
@@ -249,7 +249,7 @@ CMakeFiles/run.dir/all: CMakeFiles/grcc.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/run.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 2
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 4
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/run.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 0
 .PHONY : CMakeFiles/run.dir/rule

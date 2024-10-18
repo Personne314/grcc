@@ -4,7 +4,8 @@
 #include <cctype>
 
 
-using std::string, std::vector, std::cerr, std::endl;
+using std::string, std::vector; 
+using std::cerr, std::endl;
 
 
 // All the diffrent types of tokens.
@@ -16,7 +17,6 @@ enum RegexTokenType : char {
 	REG_TK_INT,
 	REG_TK_EOE
 };
-
 
 
 // Lexer states.
@@ -250,6 +250,370 @@ ERROR_UNKNOWN_SKIP:
 }
 
 
+bool regexParseExpr(vector<int>::const_iterator &it, RegexTreeExpr &tree);
+bool regexParseBegin(vector<int>::const_iterator &it, bool &begin);
+bool regexParseEnd(vector<int>::const_iterator &it, bool &end);
+bool regexParseUnion(vector<int>::const_iterator &it, RegexTreeUnion *&node);
+bool regexParseConcat(vector<int>::const_iterator &it, RegexTreeConcat *&node);
+bool regexParseAtom(vector<int>::const_iterator &it, RegexTreeAtom *&node);
+bool regexParseQuant(vector<int>::const_iterator &it, RegexTreeQuant *&node);
+bool regexParseLetter(vector<int>::const_iterator &it, RegexTreeNode *&node);
+bool regexParseList(vector<int>::const_iterator &it, RegexTreeClass *&node);
+bool regexParseElt(vector<int>::const_iterator &it, vector<RegexTreeNode*> &nodes);
+void regexParseLitt(vector<int>::const_iterator &it, RegexTreeLitt *&node);
+bool regexParseUnion1(vector<int>::const_iterator &it, RegexTreeUnion *&node);
+bool regexParseConcat1(vector<int>::const_iterator &it, RegexTreeConcat *&node);
+bool regexParseAtom1(vector<int>::const_iterator &it, RegexTreeAtom *&node);
+bool regexParseQuant1(vector<int>::const_iterator &it, RegexTreeQuant *&node);
+bool regexParseQuant2(vector<int>::const_iterator &it, RegexTreeQuant *&node);
+bool regexParseLetter1(vector<int>::const_iterator &it, RegexTreeNode *&node);
+bool regexParseList1(vector<int>::const_iterator &it, RegexTreeClass *&node);
+bool regexParseElt1(vector<int>::const_iterator &it, vector<RegexTreeNode*> &nodes, RegexTreeLitt *&node);
+
+
+
+
+
+bool regexParseExpr(vector<int>::const_iterator &it, RegexTreeExpr &tree) {
+	char type;
+	TOKEN_TYPE(*it, type);
+
+	if (*it == TOKEN_MAKE(REG_TK_OP, '^') ||
+		*it == TOKEN_MAKE(REG_TK_OP, '(') ||
+		*it == TOKEN_MAKE(REG_TK_OP, '[') ||
+		type == REG_TK_CHAR || type == REG_TK_ESC) {
+		tree = RegexTreeExpr();
+		RegexTreeUnion *union_node = nullptr;
+		if (!regexParseBegin(it, tree.m_begin)) goto ERROR_PARSE_EXPR;
+		if (!regexParseUnion(it, union_node)) goto ERROR_PARSE_EXPR;
+		tree.m_node = union_node;
+		if (!regexParseEnd(it, tree.m_end)) goto ERROR_PARSE_EXPR;
+		return true;
+	}
+
+ERROR_PARSE_EXPR:
+	tree = RegexTreeExpr();
+	return false;
+
+}
+
+bool regexParseBegin(vector<int>::const_iterator &it, bool &begin) {
+	char type;
+	TOKEN_TYPE(*it, type);
+
+	if (*it == TOKEN_MAKE(REG_TK_OP, '(') ||
+		*it == TOKEN_MAKE(REG_TK_OP, '[') ||
+		type == REG_TK_CHAR || type == REG_TK_ESC) {
+		begin = false;
+		return true;
+	} else if (*it == TOKEN_MAKE(REG_TK_OP, '^')) {
+		++it;
+		begin = true;
+		return true;
+	}
+	return false;
+
+}
+
+bool regexParseEnd(vector<int>::const_iterator &it, bool &end) {
+	char type;
+	TOKEN_TYPE(*it, type);
+	
+	if (*it == TOKEN_MAKE(REG_TK_OP, '$') ) {
+		end = true;
+		return true;
+	} else if (type == REG_TK_EOE) {
+		end = false;
+		return true;
+	}
+	return false;
+
+}
+
+bool regexParseUnion(vector<int>::const_iterator &it, RegexTreeUnion *&node) {
+	char type;
+	TOKEN_TYPE(*it, type);
+
+	if (!node) node = new RegexTreeUnion();
+	vector<RegexTreeNode*> &nodes = node->m_nodes;
+
+	RegexTreeConcat *concat_node = nullptr;
+	if (*it == TOKEN_MAKE(REG_TK_OP, '(') ||
+		*it == TOKEN_MAKE(REG_TK_OP, '[') ||
+		type == REG_TK_CHAR || type == REG_TK_ESC) {
+		if (!regexParseConcat(it, concat_node)) goto PARSE_UNION_ERROR;
+		nodes.push_back(concat_node);
+		if (!regexParseUnion1(it, node)) goto PARSE_UNION_ERROR;
+		return true;
+	}
+
+PARSE_UNION_ERROR:
+	if (node) delete node;
+	node = nullptr;
+	return false;
+
+}
+
+bool regexParseConcat(vector<int>::const_iterator &it, RegexTreeConcat *&node) {
+	char type;
+	TOKEN_TYPE(*it, type);
+
+	if (!node) node = new RegexTreeConcat();
+	vector<RegexTreeNode*> &nodes = node->m_nodes;
+
+	RegexTreeAtom *atom_node = nullptr;
+	if (*it == TOKEN_MAKE(REG_TK_OP, '(') ||
+		*it == TOKEN_MAKE(REG_TK_OP, '[') ||
+		type == REG_TK_CHAR || type == REG_TK_ESC) {
+		if (!regexParseAtom(it, atom_node)) goto PARSE_CONCAT_ERROR;
+		nodes.push_back(atom_node);
+		if (!regexParseConcat1(it, node)) goto PARSE_CONCAT_ERROR;
+		return true;
+	}
+
+PARSE_CONCAT_ERROR:
+	if (node) delete node;
+	node = nullptr;
+	return false;
+
+}
+
+bool regexParseAtom(vector<int>::const_iterator &it, RegexTreeAtom *&node) {
+	char type;
+	TOKEN_TYPE(*it, type);
+
+	node = new RegexTreeAtom();
+	if (*it == TOKEN_MAKE(REG_TK_OP, '[') ||
+		type == REG_TK_CHAR || type == REG_TK_ESC) {
+		if (!regexParseLetter(it, node->m_node)) goto ERROR_PARSE_ATOM;
+		if (!regexParseQuant(it, node->m_quant)) goto ERROR_PARSE_ATOM;
+	} else if (*it == TOKEN_MAKE(REG_TK_OP, '(')) {
+		++it;
+		if (!regexParseAtom1(it, node)) goto ERROR_PARSE_ATOM;
+	}
+
+ERROR_PARSE_ATOM:
+	delete node;
+	node = nullptr;
+	return false;
+
+}
+
+bool regexParseQuant(vector<int>::const_iterator &it, RegexTreeQuant *&node) {
+	char type;
+	TOKEN_TYPE(*it, type);
+
+	node = new RegexTreeQuant();
+	if (*it == TOKEN_MAKE(REG_TK_OP, '$') ||
+		*it == TOKEN_MAKE(REG_TK_OP, '|') ||
+		*it == TOKEN_MAKE(REG_TK_OP, '(') ||
+		*it == TOKEN_MAKE(REG_TK_OP, ')') ||
+		*it == TOKEN_MAKE(REG_TK_OP, '[') ||
+		type == REG_TK_CHAR || type == REG_TK_ESC || type == REG_TK_EOE) {
+		return true;
+
+	} else if (*it == TOKEN_MAKE(REG_TK_OP, '+')) {
+		node->m_min = 1;
+		node->m_max = -1;
+		++it;
+		return true;
+
+	} else if (*it == TOKEN_MAKE(REG_TK_OP, '*')) {
+		node->m_min = 0;
+		node->m_max = -1;
+		++it;
+		return true;
+
+	} else if (*it == TOKEN_MAKE(REG_TK_OP, '?')) {
+		node->m_min = 0;
+		node->m_max = 1;
+		++it;
+		return true;
+	
+	} else if (*it == TOKEN_MAKE(REG_TK_OP, '{')) {
+		++it;
+		TOKEN_TYPE(*it, type);
+		if (type == REG_TK_INT) {
+			++it;
+			TOKEN_VAL(*it, node->m_min);
+			if (regexParseQuant2(it, node)) return true;
+		}
+	}
+
+	delete node;
+	node = nullptr;
+	return false;
+
+}
+
+bool regexParseLetter(vector<int>::const_iterator &it, RegexTreeNode *&node) {
+	char type;
+	TOKEN_TYPE(*it, type);
+
+	node = new RegexTreeQuant();
+	if (type == REG_TK_CHAR || type == REG_TK_ESC) {
+		RegexTreeLitt *litt_node = new RegexTreeLitt();
+		node = litt_node;
+		it++;
+		regexParseLitt(it, litt_node);
+		return true;
+	} else if (*it == TOKEN_MAKE(REG_TK_OP, '[')) {
+		++it;
+		if (!regexParseLetter1(it, node)) return false;
+		return true;
+	}
+	return false;
+
+}
+
+bool regexParseList(vector<int>::const_iterator &it, RegexTreeClass *&node) {
+	char type;
+	TOKEN_TYPE(*it, type);
+
+	if (type != REG_TK_CHAR && type != REG_TK_ESC) return false;
+	if (!regexParseElt(it, node->m_nodes)) return false;
+	if (!regexParseList1(it, node)) return false;
+	return true;
+
+}
+
+bool regexParseElt(vector<int>::const_iterator &it, std::vector<RegexTreeNode*> &nodes) {
+	char type;
+	TOKEN_TYPE(*it, type);
+
+	if (type != REG_TK_CHAR && type != REG_TK_ESC) return false;
+	RegexTreeLitt *litt_node = new RegexTreeLitt();
+	it++;
+	regexParseLitt(it, litt_node);
+	nodes.push_back(litt_node);
+	if (!regexParseElt1(it, nodes, litt_node)) return false;
+	return true;
+
+}
+
+
+
+void regexParseLitt(vector<int>::const_iterator &it, RegexTreeLitt *&node) {
+	char type, val;
+	TOKEN_SPLIT(*it, type, val);
+	node->m_esc = (type == REG_TK_ESC);	
+	node->m_val = val;
+}
+
+bool regexParseUnion1(vector<int>::const_iterator &it, RegexTreeUnion *&node) {
+	char type;
+	TOKEN_TYPE(*it, type);
+
+	if (*it == TOKEN_MAKE(REG_TK_OP, '$') ||
+		*it == TOKEN_MAKE(REG_TK_OP, ')') ||
+		type == REG_TK_EOE) {
+		return true;
+	} else if (*it == TOKEN_MAKE(REG_TK_OP, '|')) {
+		++it;
+		if (!regexParseUnion(it, node)) return false;
+		return true;
+	}
+	return false;
+
+}
+
+bool regexParseConcat1(vector<int>::const_iterator &it, RegexTreeConcat *&node) {
+	char type;
+	TOKEN_TYPE(*it, type);
+
+	if (*it == TOKEN_MAKE(REG_TK_OP, '$') ||
+		*it == TOKEN_MAKE(REG_TK_OP, '|') ||
+		*it == TOKEN_MAKE(REG_TK_OP, ')') ||
+		type == REG_TK_EOE) {
+		return true;
+	} else if (
+		*it == TOKEN_MAKE(REG_TK_OP, '(') ||
+		*it == TOKEN_MAKE(REG_TK_OP, '[') ||
+		type == REG_TK_CHAR || type == REG_TK_ESC) {
+		++it;
+		if (!regexParseConcat(it, node)) return false;
+		return true;
+	}
+	return false;
+
+}
+
+bool regexParseAtom1(vector<int>::const_iterator &it, RegexTreeAtom *&node) {
+	char type, val;
+	TOKEN_SPLIT(*it, type, val);
+
+	RegexTreeUnion *union_node = nullptr;
+	if (*it == TOKEN_MAKE(REG_TK_OP, '(') ||
+		*it == TOKEN_MAKE(REG_TK_OP, '[') ||
+		type == REG_TK_CHAR || type == REG_TK_ESC) {
+
+		if (!regexParseUnion(it, union_node)) return false;
+		node->m_node = union_node;
+		if (*(it++) != TOKEN_MAKE(REG_TK_OP, ')')) return false;
+		if (!regexParseQuant(it, node->m_quant)) return false;
+		return true;
+
+	} else if (type == REG_TK_SKIP) {
+		RegexTreeSkip *skip_node = new RegexTreeSkip();
+		skip_node->m_match = (val == '=');
+		node->m_node = skip_node;
+		++it;
+		if (!regexParseUnion(it, union_node)) return false;
+		skip_node->m_node = union_node;
+		if (*(it++) != TOKEN_MAKE(REG_TK_OP, ')')) return false;
+		return true;
+	}
+
+	return false;
+}
+
+bool regexParseQuant1(vector<int>::const_iterator &it, RegexTreeQuant *&node) {
+	char type;
+	TOKEN_TYPE(*it, type);
+
+	if (type = REG_TK_INT) {
+		++it;
+		TOKEN_VAL(*it, node->m_max);
+		if (*it == TOKEN_MAKE(REG_TK_OP, '}')) {
+			++it;
+			return true;
+		}
+	} else if (*it == TOKEN_MAKE(REG_TK_OP, '}')) {
+		++it;
+		return true;
+	}
+	return false;
+
+}
+
+bool regexParseQuant2(vector<int>::const_iterator &it, RegexTreeQuant *&node) {
+
+	if (*it == TOKEN_MAKE(REG_TK_OP, '}')) {
+		++it;
+		return true;
+	} else if (*it == TOKEN_MAKE(REG_TK_OP, ',')) {
+		++it;
+		if (regexParseQuant1(it, node)) return true;
+	}
+	return false;
+
+}
+
+bool regexParseLetter1(vector<int>::const_iterator &it, RegexTreeNode *&node) {
+	char type;
+	TOKEN_TYPE(*it, type);
+
+	RegexTreeClass *class_node = new RegexTreeClass();
+	node = class_node;
+	if (*it == TOKEN_MAKE(REG_TK_OP, '^')) ++it;
+	else if (type != REG_TK_CHAR && type != REG_TK_ESC) return false;
+
+	regexParseList(it, class_node);
+	if (*it != TOKEN_MAKE(REG_TK_OP, ']')) return false;
+	++it;
+	return true;
+
+}
 
 
 
@@ -258,3 +622,109 @@ ERROR_UNKNOWN_SKIP:
 
 
 
+
+
+bool regexParseList1(vector<int>::const_iterator &it, RegexTreeClass *&node) {
+	char type;
+	TOKEN_TYPE(*it, type);
+
+	if (*it == TOKEN_MAKE(REG_TK_OP, ']')) return true;
+	if (type != REG_TK_CHAR && type != REG_TK_ESC) return false;
+	if (!regexParseList(it, node)) return false;
+	return true;
+
+}
+
+bool regexParseElt1(vector<int>::const_iterator &it, vector<RegexTreeNode*> &nodes, RegexTreeLitt *&node) {
+	char type;
+	TOKEN_TYPE(*it, type);
+
+	if (*it == TOKEN_MAKE(REG_TK_OP, ']') ||
+		type == REG_TK_CHAR || type == REG_TK_ESC) return true;
+	if (*it != TOKEN_MAKE(REG_TK_OP, '-')) return false;
+
+	TOKEN_TYPE(*(++it), type);
+	if (type != REG_TK_CHAR && type != REG_TK_ESC) return false;
+	
+	++it;
+	RegexTreeLitt *litt_node = new RegexTreeLitt();
+	regexParseLitt(it, litt_node);
+	RegexTreeSeq *seq_node = new RegexTreeSeq();
+	seq_node->m_litt_min = node;
+	seq_node->m_litt_max = litt_node;
+	nodes.back() = seq_node;
+	return true;
+
+}
+
+
+
+
+
+
+
+bool regexParser(const string &str) {
+
+	// Get the list of tokens from the expression string.
+	vector<int> tokens;
+	if (!regexLexer(str, tokens)) return false;
+
+
+	return true;
+
+}
+
+
+
+
+
+RegexTreeNode::RegexTreeNode() {}
+RegexTreeNode::~RegexTreeNode() {}
+
+RegexTreeExpr::RegexTreeExpr() : m_begin(false), m_end(false), m_node(nullptr) {}
+RegexTreeExpr::~RegexTreeExpr() {if (m_node) delete m_node;}
+RegexTreeType RegexTreeExpr::getType() {return REG_TREE_EXPR;}
+
+RegexTreeUnion::RegexTreeUnion() : m_nodes() {}
+RegexTreeUnion::~RegexTreeUnion() {
+	for (RegexTreeNode* node : m_nodes) if (node) delete node;
+}
+RegexTreeType RegexTreeUnion::getType() {return REG_TREE_UNION;}
+
+RegexTreeConcat::RegexTreeConcat() : m_nodes() {}
+RegexTreeConcat::~RegexTreeConcat() {
+	for (RegexTreeNode* node : m_nodes) if (node) delete node;
+}
+RegexTreeType RegexTreeConcat::getType() {return REG_TREE_CONCAT;}
+
+RegexTreeQuant::RegexTreeQuant() : m_min(0), m_max(0) {}
+RegexTreeQuant::~RegexTreeQuant() {}
+RegexTreeType RegexTreeQuant::getType() {return REG_TREE_QUANT;}
+
+RegexTreeAtom::RegexTreeAtom() : m_node(nullptr), m_quant(nullptr) {}
+RegexTreeAtom::~RegexTreeAtom() {
+	if (m_node) delete m_node;
+	if (m_quant) delete m_quant;
+}
+RegexTreeType RegexTreeAtom::getType() {return REG_TREE_ATOM;}
+
+RegexTreeSkip::RegexTreeSkip() : m_match(false), m_node(nullptr) {}
+RegexTreeSkip::~RegexTreeSkip() {if (m_node) delete m_node;}
+RegexTreeType RegexTreeSkip::getType() {return REG_TREE_SKIP;}
+
+RegexTreeClass::RegexTreeClass() : m_match(false), m_nodes() {
+	for (RegexTreeNode* node : m_nodes) if (node) delete node;
+}
+RegexTreeClass::~RegexTreeClass() {}
+RegexTreeType RegexTreeClass::getType() {return REG_TREE_CLASS;}
+
+RegexTreeLitt::RegexTreeLitt() : m_esc(false), m_val(0) {}
+RegexTreeLitt::~RegexTreeLitt() {}
+RegexTreeType RegexTreeLitt::getType() {return REG_TREE_LITT;}
+
+RegexTreeSeq::RegexTreeSeq() : m_litt_min(nullptr), m_litt_max(nullptr) {}
+RegexTreeSeq::~RegexTreeSeq() {
+	if (m_litt_min) delete m_litt_min;
+	if (m_litt_max) delete m_litt_max;
+}
+RegexTreeType RegexTreeSeq::getType() {return REG_TREE_SEQ;}

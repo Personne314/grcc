@@ -1,0 +1,158 @@
+[LLkTable]
+This grammar is LL(1)
+Expr
+\--> litt :
+     \--> Expr -> Begin Union End
+\--> ^ :
+     \--> Expr -> Begin Union End
+\--> ( :
+     \--> Expr -> Begin Union End
+\--> [ :
+     \--> Expr -> Begin Union End
+
+Begin
+\--> litt :
+     \--> Begin -> 
+\--> ^ :
+     \--> Begin -> ^
+\--> ( :
+     \--> Begin -> 
+\--> [ :
+     \--> Begin -> 
+
+End
+\--> $ :
+     \--> End -> 
+\--> .$ :
+     \--> End -> .$
+
+Union
+\--> litt :
+     \--> Union -> Concat Union_1
+\--> ( :
+     \--> Union -> Concat Union_1
+\--> [ :
+     \--> Union -> Concat Union_1
+
+Concat
+\--> litt :
+     \--> Concat -> Atom Concat_1
+\--> ( :
+     \--> Concat -> Atom Concat_1
+\--> [ :
+     \--> Concat -> Atom Concat_1
+
+Atom
+\--> litt :
+     \--> Atom -> Letter Quant
+\--> ( :
+     \--> Atom -> ( Atom_1
+\--> [ :
+     \--> Atom -> Letter Quant
+
+Quant
+\--> $ :
+     \--> Quant -> 
+\--> litt :
+     \--> Quant -> 
+\--> .$ :
+     \--> Quant -> 
+\--> | :
+     \--> Quant -> 
+\--> ( :
+     \--> Quant -> 
+\--> ) :
+     \--> Quant -> 
+\--> [ :
+     \--> Quant -> 
+\--> { :
+     \--> Quant -> { int Quant_2
+\--> + :
+     \--> Quant -> +
+\--> * :
+     \--> Quant -> *
+\--> ? :
+     \--> Quant -> ?
+
+Letter
+\--> litt :
+     \--> Letter -> litt
+\--> [ :
+     \--> Letter -> [ Letter_1
+
+List
+\--> litt :
+     \--> List -> Elt List_1
+
+Elt
+\--> litt :
+     \--> Elt -> litt Elt_1
+
+Union_1
+\--> $ :
+     \--> Union_1 -> 
+\--> .$ :
+     \--> Union_1 -> 
+\--> | :
+     \--> Union_1 -> | Union
+\--> ) :
+     \--> Union_1 -> 
+
+Concat_1
+\--> $ :
+     \--> Concat_1 -> 
+\--> litt :
+     \--> Concat_1 -> Concat
+\--> .$ :
+     \--> Concat_1 -> 
+\--> | :
+     \--> Concat_1 -> 
+\--> ( :
+     \--> Concat_1 -> Concat
+\--> ) :
+     \--> Concat_1 -> 
+\--> [ :
+     \--> Concat_1 -> Concat
+
+Atom_1
+\--> litt :
+     \--> Atom_1 -> Union ) Quant
+\--> skip :
+     \--> Atom_1 -> skip Union )
+\--> ( :
+     \--> Atom_1 -> Union ) Quant
+\--> [ :
+     \--> Atom_1 -> Union ) Quant
+
+Quant_1
+\--> int :
+     \--> Quant_1 -> int }
+\--> } :
+     \--> Quant_1 -> }
+
+Quant_2
+\--> } :
+     \--> Quant_2 -> }
+\--> , :
+     \--> Quant_2 -> , Quant_1
+
+Letter_1
+\--> litt :
+     \--> Letter_1 -> List ]
+\--> ^ :
+     \--> Letter_1 -> ^ List ]
+
+List_1
+\--> litt :
+     \--> List_1 -> List
+\--> ] :
+     \--> List_1 -> 
+
+Elt_1
+\--> litt :
+     \--> Elt_1 -> 
+\--> ] :
+     \--> Elt_1 -> 
+\--> - :
+     \--> Elt_1 -> - litt
+

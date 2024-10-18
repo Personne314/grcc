@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = 
 
-CXX_FLAGS = -O3 -DNDEBUG -std=gnu++23 -O3
+CXX_FLAGS = -O3 -DNDEBUG -std=gnu++23 -std=c++23 -O3
 

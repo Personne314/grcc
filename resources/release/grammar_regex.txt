@@ -6,7 +6,7 @@ litt
 int
 skip
 ^
-$
+.$
 |
 (
 )
@@ -39,7 +39,7 @@ Expr
 Expr -> Begin Union End
 Begin -> ^
 Begin ->
-End -> $
+End -> .$
 End ->
 Union -> Concat
 Union -> Concat | Union
@@ -54,6 +54,7 @@ Quant -> ?
 Quant -> { int }
 Quant -> { int , }
 Quant -> { int , int }
+Quant ->
 Letter -> litt
 Letter -> [ List ]
 Letter -> [ ^ List ]

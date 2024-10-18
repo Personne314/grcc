@@ -29,8 +29,8 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(EXEC_NAME "grcc")
 # set(LIBRARIES )
-set(DEBUG_FLAGS -g -Wall -Wextra)
-set(RELEASE_FLAGS -O3)
+set(DEBUG_FLAGS -std=c++23 -g -Wall -Wextra)
+set(RELEASE_FLAGS -std=c++23 -O3)
 
 
 

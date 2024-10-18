@@ -110,12 +110,12 @@ CMakeFiles/copy_resources.dir/clean:
 CMakeFiles/grcc.dir/all: CMakeFiles/copy_resources.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles --progress-num=1,2 "Built target grcc"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles --progress-num=1,2,3,4 "Built target grcc"
 .PHONY : CMakeFiles/grcc.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/grcc.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles 2
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles 4
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/grcc.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles 0
 .PHONY : CMakeFiles/grcc.dir/rule
@@ -167,7 +167,7 @@ CMakeFiles/run.dir/all: CMakeFiles/grcc.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/run.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles 2
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles 4
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/run.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/release/CMakeFiles 0
 .PHONY : CMakeFiles/run.dir/rule

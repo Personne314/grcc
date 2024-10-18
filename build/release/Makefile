@@ -192,6 +192,54 @@ src/grammar.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/grammar.cpp.s
 .PHONY : src/grammar.cpp.s
 
+src/main.o: src/main.cpp.o
+.PHONY : src/main.o
+
+# target to build an object file
+src/main.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/main.cpp.o
+.PHONY : src/main.cpp.o
+
+src/main.i: src/main.cpp.i
+.PHONY : src/main.i
+
+# target to preprocess a source file
+src/main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/main.cpp.i
+.PHONY : src/main.cpp.i
+
+src/main.s: src/main.cpp.s
+.PHONY : src/main.s
+
+# target to generate assembly for a file
+src/main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/main.cpp.s
+.PHONY : src/main.cpp.s
+
+src/regex.o: src/regex.cpp.o
+.PHONY : src/regex.o
+
+# target to build an object file
+src/regex.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/regex.cpp.o
+.PHONY : src/regex.cpp.o
+
+src/regex.i: src/regex.cpp.i
+.PHONY : src/regex.i
+
+# target to preprocess a source file
+src/regex.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/regex.cpp.i
+.PHONY : src/regex.cpp.i
+
+src/regex.s: src/regex.cpp.s
+.PHONY : src/regex.s
+
+# target to generate assembly for a file
+src/regex.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/regex.cpp.s
+.PHONY : src/regex.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -207,6 +255,12 @@ help:
 	@echo "... src/grammar.o"
 	@echo "... src/grammar.i"
 	@echo "... src/grammar.s"
+	@echo "... src/main.o"
+	@echo "... src/main.i"
+	@echo "... src/main.s"
+	@echo "... src/regex.o"
+	@echo "... src/regex.i"
+	@echo "... src/regex.s"
 .PHONY : help
 
 
