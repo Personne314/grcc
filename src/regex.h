@@ -34,7 +34,8 @@ class RegexTreeNode {
 public:
 	RegexTreeNode();
 	virtual ~RegexTreeNode() = 0;
-	virtual RegexTreeType getType() = 0;
+	virtual RegexTreeType getType() const = 0;
+	virtual void print(int depth) const = 0;
 };
 
 
@@ -45,9 +46,10 @@ public :
 	RegexTreeExpr();
 	~RegexTreeExpr();
 
-	RegexTreeType getType();
+	RegexTreeType getType() const;
+	void print(int depth = 0) const;
 
-	friend bool regexParseExpr(std::vector<int>::const_iterator &it, RegexTreeExpr &tree);
+	friend bool regexParseExpr(std::vector<int>::const_iterator it, RegexTreeExpr &tree);
 
 private :
 
@@ -65,7 +67,8 @@ public :
 	RegexTreeUnion();
 	~RegexTreeUnion();
 
-	RegexTreeType getType();
+	RegexTreeType getType() const;
+	void print(int depth) const;
 
 	friend bool regexParseUnion(std::vector<int>::const_iterator &it, RegexTreeUnion *&node);
 
@@ -83,7 +86,8 @@ public :
 	RegexTreeConcat();
 	~RegexTreeConcat();
 
-	RegexTreeType getType();
+	RegexTreeType getType() const;
+	void print(int depth) const;
 
 	friend bool regexParseConcat(std::vector<int>::const_iterator &it, RegexTreeConcat *&node);
 
@@ -101,7 +105,8 @@ public :
 	RegexTreeQuant();
 	~RegexTreeQuant();
 
-	RegexTreeType getType();
+	RegexTreeType getType() const;
+	void print(int depth) const;
 
 	friend bool regexParseQuant(std::vector<int>::const_iterator &it, RegexTreeQuant *&node);
 	friend bool regexParseQuant1(std::vector<int>::const_iterator &it, RegexTreeQuant *&node); 
@@ -122,7 +127,8 @@ public :
 	RegexTreeAtom();
 	~RegexTreeAtom();
 
-	RegexTreeType getType();
+	RegexTreeType getType() const;
+	void print(int depth) const;
 
 	friend bool regexParseAtom(std::vector<int>::const_iterator &it, RegexTreeAtom *&node);
 	friend bool regexParseAtom1(std::vector<int>::const_iterator &it, RegexTreeAtom *&node);
@@ -142,7 +148,8 @@ public :
 	RegexTreeSkip();
 	~RegexTreeSkip();
 
-	RegexTreeType getType();
+	RegexTreeType getType() const;
+	void print(int depth) const;
 
 	friend bool regexParseAtom1(std::vector<int>::const_iterator &it, RegexTreeAtom *&node);
 
@@ -161,7 +168,8 @@ public :
 	RegexTreeClass();
 	~RegexTreeClass();
 
-	RegexTreeType getType();
+	RegexTreeType getType() const;
+	void print(int depth) const;
 
 	friend bool regexParseList(std::vector<int>::const_iterator &it, RegexTreeClass *&node);
 
@@ -180,7 +188,8 @@ public :
 	RegexTreeLitt();
 	~RegexTreeLitt();
 
-	RegexTreeType getType();
+	RegexTreeType getType() const;
+	void print(int depth) const;
 
 	friend void regexParseLitt(std::vector<int>::const_iterator &it, RegexTreeLitt *&node);
 
@@ -199,7 +208,8 @@ public :
 	RegexTreeSeq();
 	~RegexTreeSeq();
 
-	RegexTreeType getType();
+	RegexTreeType getType() const;
+	void print(int depth) const;
 
 	friend bool regexParseElt1(std::vector<int>::const_iterator &it, std::vector<RegexTreeNode*> &nodes, RegexTreeLitt *&node);
 

@@ -5,7 +5,7 @@
 
 
 using std::string, std::vector; 
-using std::cerr, std::endl;
+using std::cout, std::cerr, std::endl;
 
 
 // All the diffrent types of tokens.
@@ -250,7 +250,7 @@ ERROR_UNKNOWN_SKIP:
 }
 
 
-bool regexParseExpr(vector<int>::const_iterator &it, RegexTreeExpr &tree);
+bool regexParseExpr(vector<int>::const_iterator it, RegexTreeExpr &tree);
 bool regexParseBegin(vector<int>::const_iterator &it, bool &begin);
 bool regexParseEnd(vector<int>::const_iterator &it, bool &end);
 bool regexParseUnion(vector<int>::const_iterator &it, RegexTreeUnion *&node);
@@ -274,7 +274,7 @@ bool regexParseElt1(vector<int>::const_iterator &it, vector<RegexTreeNode*> &nod
 
 
 
-bool regexParseExpr(vector<int>::const_iterator &it, RegexTreeExpr &tree) {
+bool regexParseExpr(vector<int>::const_iterator it, RegexTreeExpr &tree) {
 	char type;
 	TOKEN_TYPE(*it, type);
 
@@ -580,6 +580,7 @@ bool regexParseQuant1(vector<int>::const_iterator &it, RegexTreeQuant *&node) {
 		}
 	} else if (*it == TOKEN_MAKE(REG_TK_OP, '}')) {
 		++it;
+		node->m_max = -1;
 		return true;
 	}
 	return false;
@@ -590,6 +591,7 @@ bool regexParseQuant2(vector<int>::const_iterator &it, RegexTreeQuant *&node) {
 
 	if (*it == TOKEN_MAKE(REG_TK_OP, '}')) {
 		++it;
+		node->m_max = node->m_min;
 		return true;
 	} else if (*it == TOKEN_MAKE(REG_TK_OP, ',')) {
 		++it;
@@ -614,15 +616,6 @@ bool regexParseLetter1(vector<int>::const_iterator &it, RegexTreeNode *&node) {
 	return true;
 
 }
-
-
-
-
-
-
-
-
-
 
 bool regexParseList1(vector<int>::const_iterator &it, RegexTreeClass *&node) {
 	char type;
@@ -669,6 +662,9 @@ bool regexParser(const string &str) {
 	vector<int> tokens;
 	if (!regexLexer(str, tokens)) return false;
 
+	RegexTreeExpr tree;
+	if (!regexParseExpr(tokens.begin(), tree)) return false;
+	tree.print();
 
 	return true;
 
@@ -683,48 +679,168 @@ RegexTreeNode::~RegexTreeNode() {}
 
 RegexTreeExpr::RegexTreeExpr() : m_begin(false), m_end(false), m_node(nullptr) {}
 RegexTreeExpr::~RegexTreeExpr() {if (m_node) delete m_node;}
-RegexTreeType RegexTreeExpr::getType() {return REG_TREE_EXPR;}
+RegexTreeType RegexTreeExpr::getType() const {return REG_TREE_EXPR;}
+void RegexTreeExpr::print(int depth) const {
+	cout << "Expr -> ";
+	if (m_begin) cout << "Begin ";
+	if (m_end) cout << "End ";
+	cout << endl;
+	m_node->print(0);
+}
 
 RegexTreeUnion::RegexTreeUnion() : m_nodes() {}
 RegexTreeUnion::~RegexTreeUnion() {
-	for (RegexTreeNode* node : m_nodes) if (node) delete node;
+	for (RegexTreeNode *node : m_nodes) if (node) delete node;
 }
-RegexTreeType RegexTreeUnion::getType() {return REG_TREE_UNION;}
+RegexTreeType RegexTreeUnion::getType() const {return REG_TREE_UNION;}
+void RegexTreeUnion::print(int depth) const {
+	
+	for (int i = 0; i < depth; ++i) {
+		if (i == depth-1) cout << "├╴Union" << endl;
+		else cout << "│ ";
+	}
+	
+	for (RegexTreeNode *node : m_nodes) {
+		if (node) node->print(depth+1);
+	}
+
+	for (int i = 0; i < depth-1; ++i) cout << "│ ";
+	cout << endl;
+
+}
 
 RegexTreeConcat::RegexTreeConcat() : m_nodes() {}
 RegexTreeConcat::~RegexTreeConcat() {
-	for (RegexTreeNode* node : m_nodes) if (node) delete node;
+	for (RegexTreeNode *node : m_nodes) if (node) delete node;
 }
-RegexTreeType RegexTreeConcat::getType() {return REG_TREE_CONCAT;}
+RegexTreeType RegexTreeConcat::getType() const {return REG_TREE_CONCAT;}
+void RegexTreeConcat::print(int depth) const {
+
+	for (int i = 0; i < depth; ++i) {
+		if (i == depth-1) cout << "├╴Concat" << endl;
+		else cout << "│ ";
+	}
+	
+	for (RegexTreeNode *node : m_nodes) {
+		if (node) node->print(depth+1);
+	}
+
+	for (int i = 0; i < depth-1; ++i) cout << "│ ";
+	cout << endl;
+
+}
 
 RegexTreeQuant::RegexTreeQuant() : m_min(0), m_max(0) {}
 RegexTreeQuant::~RegexTreeQuant() {}
-RegexTreeType RegexTreeQuant::getType() {return REG_TREE_QUANT;}
+RegexTreeType RegexTreeQuant::getType() const {return REG_TREE_QUANT;}
+void RegexTreeQuant::print(int depth) const {
+	
+	for (int i = 0; i < depth; ++i) {
+		if (i == depth-1) cout << "├╴Quant (" << m_min << "," << m_max << ")" << endl;
+		else cout << "│ ";
+	}
+	
+	for (int i = 0; i < depth-1; ++i) cout << "│ ";
+	cout << endl;
+
+}
 
 RegexTreeAtom::RegexTreeAtom() : m_node(nullptr), m_quant(nullptr) {}
 RegexTreeAtom::~RegexTreeAtom() {
 	if (m_node) delete m_node;
 	if (m_quant) delete m_quant;
 }
-RegexTreeType RegexTreeAtom::getType() {return REG_TREE_ATOM;}
+RegexTreeType RegexTreeAtom::getType() const {return REG_TREE_ATOM;}
+void RegexTreeAtom::print(int depth) const {
+
+	for (int i = 0; i < depth; ++i) {
+		if (i == depth-1) cout << "├╴Atom" << endl;
+		else cout << "│ ";
+	}
+	
+	if (m_node) m_node->print(depth+1);
+	if (m_quant) m_quant->print(depth+1);
+	
+	for (int i = 0; i < depth-1; ++i) cout << "│ ";
+	cout << endl;
+
+}
 
 RegexTreeSkip::RegexTreeSkip() : m_match(false), m_node(nullptr) {}
 RegexTreeSkip::~RegexTreeSkip() {if (m_node) delete m_node;}
-RegexTreeType RegexTreeSkip::getType() {return REG_TREE_SKIP;}
+RegexTreeType RegexTreeSkip::getType() const {return REG_TREE_SKIP;}
+void RegexTreeSkip::print(int depth) const {
 
-RegexTreeClass::RegexTreeClass() : m_match(false), m_nodes() {
-	for (RegexTreeNode* node : m_nodes) if (node) delete node;
+	for (int i = 0; i < depth; ++i) {
+		if (i == depth-1) cout << "├╴Skip (" << (m_match ? "match" : "unmatch") << ")" << endl;
+		else cout << "│ ";
+	}
+	
+	if (m_node) m_node->print(depth+1);
+	
+	for (int i = 0; i < depth-1; ++i) cout << "│ ";
+	cout << endl;
+
 }
-RegexTreeClass::~RegexTreeClass() {}
-RegexTreeType RegexTreeClass::getType() {return REG_TREE_CLASS;}
+
+RegexTreeClass::RegexTreeClass() : m_match(false), m_nodes() {}
+RegexTreeClass::~RegexTreeClass() {
+	for (RegexTreeNode *node : m_nodes) if (node) delete node;
+}
+RegexTreeType RegexTreeClass::getType() const {return REG_TREE_CLASS;}
+void RegexTreeClass::print(int depth) const {
+
+	for (int i = 0; i < depth; ++i) {
+		if (i == depth-1) cout << "├╴Class (" << (m_match ? "match" : "unmatch") << ")" << endl;
+		else cout << "│ ";
+	}
+	
+	for (RegexTreeNode *node : m_nodes) {
+		if (node) node->print(depth+1);
+	}
+
+	for (int i = 0; i < depth-1; ++i) cout << "│ ";
+	cout << endl;
+
+}
 
 RegexTreeLitt::RegexTreeLitt() : m_esc(false), m_val(0) {}
 RegexTreeLitt::~RegexTreeLitt() {}
-RegexTreeType RegexTreeLitt::getType() {return REG_TREE_LITT;}
+RegexTreeType RegexTreeLitt::getType() const {return REG_TREE_LITT;}
+void RegexTreeLitt::print(int depth) const {
+
+	for (int i = 0; i < depth; ++i) {
+		if (i == depth-1) cout << "├╴Litt (" << (m_esc ? "escape, " : "char, ");
+		else cout << "│ ";
+	}
+	
+	if (std::isgraph(m_val)) cout << ((char)m_val);
+	else cout << std::hex << m_val;
+	cout << ")" << endl;
+
+	for (int i = 0; i < depth-1; ++i) cout << "│ ";
+	cout << endl;
+
+}
 
 RegexTreeSeq::RegexTreeSeq() : m_litt_min(nullptr), m_litt_max(nullptr) {}
 RegexTreeSeq::~RegexTreeSeq() {
 	if (m_litt_min) delete m_litt_min;
 	if (m_litt_max) delete m_litt_max;
 }
-RegexTreeType RegexTreeSeq::getType() {return REG_TREE_SEQ;}
+RegexTreeType RegexTreeSeq::getType() const {return REG_TREE_SEQ;}
+void RegexTreeSeq::print(int depth) const {
+
+	for (int i = 0; i < depth; ++i) {
+		if (i == depth-1) cout << "├╴Seq" << endl;
+		else cout << "│ ";
+	}
+	
+	if (m_litt_min) m_litt_min->print(depth+1);
+	if (m_litt_max) m_litt_max->print(depth+1);
+	
+	for (int i = 0; i < depth-1; ++i) cout << "│ ";
+	cout << endl;
+
+
+}
