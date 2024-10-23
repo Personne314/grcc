@@ -29,7 +29,7 @@ Concat
 Atom
 Quant
 Letter
-List
+Class
 Elt
 
 %axiom
@@ -56,9 +56,9 @@ Quant -> { int , }
 Quant -> { int , int }
 Quant ->
 Letter -> litt
-Letter -> [ List ]
-Letter -> [ ^ List ]
-List -> Elt
-List -> Elt List
+Letter -> [ Class ]
+Letter -> [ ^ Class ]
+Class -> Elt
+Class -> Elt Class
 Elt -> litt
 Elt -> litt - litt
