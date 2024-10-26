@@ -3,6 +3,7 @@
 /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles/build_tests.dir
 /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles/run_tests.dir
 /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles/test_grammar.dir
+/home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles/test_regex.dir
 /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles/build_root_makefile.dir
 /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles/run.dir
 /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles/edit_cache.dir

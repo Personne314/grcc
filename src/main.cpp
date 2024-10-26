@@ -14,6 +14,10 @@ int main(int argc, char *argv[]) {
 	(void)argc;
 	current_path(absolute(path(argv[0])).remove_filename());
 
-	regexParser("^^[^^\\na-b]$$");
+	regexParser("^^a*|b+e{0}e{0,}e{0,4}|c?[^^\\na-b]$$");
+	
+	
+	regexParser("a?b(c|d+)*", true);
+
 
 }

@@ -182,6 +182,19 @@ test_grammar/fast:
 .PHONY : test_grammar/fast
 
 #=============================================================================
+# Target rules for targets named test_regex
+
+# Build rule for target.
+test_regex: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_regex
+.PHONY : test_regex
+
+# fast build rule for target.
+test_regex/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_regex.dir/build.make CMakeFiles/test_regex.dir/build
+.PHONY : test_regex/fast
+
+#=============================================================================
 # Target rules for targets named build_root_makefile
 
 # Build rule for target.
@@ -214,6 +227,7 @@ src/grammar.o: src/grammar.cpp.o
 src/grammar.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/grammar.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_grammar.dir/build.make CMakeFiles/test_grammar.dir/src/grammar.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_regex.dir/build.make CMakeFiles/test_regex.dir/src/grammar.cpp.o
 .PHONY : src/grammar.cpp.o
 
 src/grammar.i: src/grammar.cpp.i
@@ -223,6 +237,7 @@ src/grammar.i: src/grammar.cpp.i
 src/grammar.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/grammar.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_grammar.dir/build.make CMakeFiles/test_grammar.dir/src/grammar.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_regex.dir/build.make CMakeFiles/test_regex.dir/src/grammar.cpp.i
 .PHONY : src/grammar.cpp.i
 
 src/grammar.s: src/grammar.cpp.s
@@ -232,6 +247,7 @@ src/grammar.s: src/grammar.cpp.s
 src/grammar.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/grammar.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_grammar.dir/build.make CMakeFiles/test_grammar.dir/src/grammar.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_regex.dir/build.make CMakeFiles/test_regex.dir/src/grammar.cpp.s
 .PHONY : src/grammar.cpp.s
 
 src/main.o: src/main.cpp.o
@@ -265,6 +281,7 @@ src/regex.o: src/regex.cpp.o
 src/regex.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/regex.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_grammar.dir/build.make CMakeFiles/test_grammar.dir/src/regex.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_regex.dir/build.make CMakeFiles/test_regex.dir/src/regex.cpp.o
 .PHONY : src/regex.cpp.o
 
 src/regex.i: src/regex.cpp.i
@@ -274,6 +291,7 @@ src/regex.i: src/regex.cpp.i
 src/regex.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/regex.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_grammar.dir/build.make CMakeFiles/test_grammar.dir/src/regex.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_regex.dir/build.make CMakeFiles/test_regex.dir/src/regex.cpp.i
 .PHONY : src/regex.cpp.i
 
 src/regex.s: src/regex.cpp.s
@@ -283,6 +301,7 @@ src/regex.s: src/regex.cpp.s
 src/regex.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/regex.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_grammar.dir/build.make CMakeFiles/test_grammar.dir/src/regex.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_regex.dir/build.make CMakeFiles/test_regex.dir/src/regex.cpp.s
 .PHONY : src/regex.cpp.s
 
 test/test_grammar.o: test/test_grammar.cpp.o
@@ -309,6 +328,30 @@ test/test_grammar.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_grammar.dir/build.make CMakeFiles/test_grammar.dir/test/test_grammar.cpp.s
 .PHONY : test/test_grammar.cpp.s
 
+test/test_regex.o: test/test_regex.cpp.o
+.PHONY : test/test_regex.o
+
+# target to build an object file
+test/test_regex.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_regex.dir/build.make CMakeFiles/test_regex.dir/test/test_regex.cpp.o
+.PHONY : test/test_regex.cpp.o
+
+test/test_regex.i: test/test_regex.cpp.i
+.PHONY : test/test_regex.i
+
+# target to preprocess a source file
+test/test_regex.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_regex.dir/build.make CMakeFiles/test_regex.dir/test/test_regex.cpp.i
+.PHONY : test/test_regex.cpp.i
+
+test/test_regex.s: test/test_regex.cpp.s
+.PHONY : test/test_regex.s
+
+# target to generate assembly for a file
+test/test_regex.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_regex.dir/build.make CMakeFiles/test_regex.dir/test/test_regex.cpp.s
+.PHONY : test/test_regex.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -324,6 +367,7 @@ help:
 	@echo "... run_tests"
 	@echo "... grcc"
 	@echo "... test_grammar"
+	@echo "... test_regex"
 	@echo "... src/grammar.o"
 	@echo "... src/grammar.i"
 	@echo "... src/grammar.s"
@@ -336,6 +380,9 @@ help:
 	@echo "... test/test_grammar.o"
 	@echo "... test/test_grammar.i"
 	@echo "... test/test_grammar.s"
+	@echo "... test/test_regex.o"
+	@echo "... test/test_regex.i"
+	@echo "... test/test_regex.s"
 .PHONY : help
 
 

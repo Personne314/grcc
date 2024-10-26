@@ -65,6 +65,7 @@ CMAKE_BINARY_DIR = /home/louis/Documents/Programmation/C++/grcc/build/debug
 # The main recursive "all" target.
 all: CMakeFiles/grcc.dir/all
 all: CMakeFiles/test_grammar.dir/all
+all: CMakeFiles/test_regex.dir/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
@@ -77,6 +78,7 @@ clean: CMakeFiles/grcc.dir/clean
 clean: CMakeFiles/build_tests.dir/clean
 clean: CMakeFiles/run_tests.dir/clean
 clean: CMakeFiles/test_grammar.dir/clean
+clean: CMakeFiles/test_regex.dir/clean
 clean: CMakeFiles/build_root_makefile.dir/clean
 clean: CMakeFiles/run.dir/clean
 .PHONY : clean
@@ -138,6 +140,7 @@ CMakeFiles/grcc.dir/clean:
 
 # All Build rule for target.
 CMakeFiles/build_tests.dir/all: CMakeFiles/test_grammar.dir/all
+CMakeFiles/build_tests.dir/all: CMakeFiles/test_regex.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/build_tests.dir/build.make CMakeFiles/build_tests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/build_tests.dir/build.make CMakeFiles/build_tests.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles --progress-num= "Built target build_tests"
@@ -145,7 +148,7 @@ CMakeFiles/build_tests.dir/all: CMakeFiles/test_grammar.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/build_tests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 4
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 8
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/build_tests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 0
 .PHONY : CMakeFiles/build_tests.dir/rule
@@ -164,6 +167,7 @@ CMakeFiles/build_tests.dir/clean:
 
 # All Build rule for target.
 CMakeFiles/run_tests.dir/all: CMakeFiles/test_grammar.dir/all
+CMakeFiles/run_tests.dir/all: CMakeFiles/test_regex.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/run_tests.dir/build.make CMakeFiles/run_tests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/run_tests.dir/build.make CMakeFiles/run_tests.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles --progress-num= "Built target run_tests"
@@ -171,7 +175,7 @@ CMakeFiles/run_tests.dir/all: CMakeFiles/test_grammar.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/run_tests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 4
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 8
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/run_tests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 0
 .PHONY : CMakeFiles/run_tests.dir/rule
@@ -210,6 +214,32 @@ test_grammar: CMakeFiles/test_grammar.dir/rule
 CMakeFiles/test_grammar.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_grammar.dir/build.make CMakeFiles/test_grammar.dir/clean
 .PHONY : CMakeFiles/test_grammar.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/test_regex.dir
+
+# All Build rule for target.
+CMakeFiles/test_regex.dir/all: CMakeFiles/copy_resources.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_regex.dir/build.make CMakeFiles/test_regex.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_regex.dir/build.make CMakeFiles/test_regex.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles --progress-num=9,10,11,12 "Built target test_regex"
+.PHONY : CMakeFiles/test_regex.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/test_regex.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 4
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_regex.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/louis/Documents/Programmation/C++/grcc/build/debug/CMakeFiles 0
+.PHONY : CMakeFiles/test_regex.dir/rule
+
+# Convenience name for target.
+test_regex: CMakeFiles/test_regex.dir/rule
+.PHONY : test_regex
+
+# clean rule for target.
+CMakeFiles/test_regex.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_regex.dir/build.make CMakeFiles/test_regex.dir/clean
+.PHONY : CMakeFiles/test_regex.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/build_root_makefile.dir

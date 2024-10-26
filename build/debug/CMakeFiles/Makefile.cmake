@@ -45,6 +45,7 @@ set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/build_tests.dir/DependInfo.cmake"
   "CMakeFiles/run_tests.dir/DependInfo.cmake"
   "CMakeFiles/test_grammar.dir/DependInfo.cmake"
+  "CMakeFiles/test_regex.dir/DependInfo.cmake"
   "CMakeFiles/build_root_makefile.dir/DependInfo.cmake"
   "CMakeFiles/run.dir/DependInfo.cmake"
   )

@@ -1,9 +1,6 @@
 #pragma once
 
 #include <iostream>
-#include <string>
-
-using std::string;
 
 namespace grcc {
 
@@ -39,6 +36,7 @@ namespace grcc {
 	// Namespace for text formating using ansi escape codes.
 	namespace ansi {
 		constexpr char *RED = const_cast<char*>("\e[0;31m");
+		constexpr char *GREEN = const_cast<char*>("\e[0;32m");
 		constexpr char *BOLD = const_cast<char*>("\e[1m");
 		constexpr char *RST = const_cast<char*>("\e[0;0m");
 	};

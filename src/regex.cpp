@@ -10,6 +10,7 @@
 
 // Usings.
 using std::string, std::vector, std::endl;
+using std::format, std::isgraph;
 using grcc::ansi::RED, grcc::ansi::RST, grcc::ansi::BOLD;
 
 
@@ -61,8 +62,8 @@ string stringFromToken(int tk) {
 	}
 
 	// Then adds the value as a char if it's printable or it's hex value.
-	if (std::isgraph(val)) str = str + "'" + val + "'";
-	else str += "0x" + std::format("{:02X}", val);
+	if (isgraph(val)) str = str + "'" + val + "'";
+	else str += "0x" + format("{:02X}", val);
 	return str + ")";
 
 }
@@ -71,7 +72,7 @@ string stringFromToken(int tk) {
 
 // Analyses the current character in case of a new token.
 void regexLexerNone(const string &str, int &val, vector<int> &tokens, 
-	char c, RegexLexerState &state, bool flags[2], int pos) {
+	char c, RegexLexerState &state, bool flags[2], size_t pos) {
 	switch(c) {
 	// Case of a start-line operator or a negation operator.
 	case '^':
@@ -133,7 +134,7 @@ void regexLexerNone(const string &str, int &val, vector<int> &tokens,
 }
 
 // Analyses the current character in case of an escape sequence.
-bool regexLexerEsc(vector<int> &tokens, char c, RegexLexerState &state, int pos) {
+bool regexLexerEsc(vector<int> &tokens, char c, RegexLexerState &state, size_t pos) {
 	state = REG_LEX_NONE;
 	switch(c) {
 	// Case of an operator. 
@@ -164,7 +165,7 @@ bool regexLexerEsc(vector<int> &tokens, char c, RegexLexerState &state, int pos)
 }
 
 // Analyses the current character in case of the start of an hex sequence.
-bool regexLexerHex1(vector<int> &tokens, char c, RegexLexerState &state, int pos) {
+bool regexLexerHex1(vector<int> &tokens, char c, RegexLexerState &state, size_t pos) {
 	int val = 0;
 	bool res = false;
 	if (c >= '0' && c <= '9') val = c-'0';
@@ -177,7 +178,7 @@ bool regexLexerHex1(vector<int> &tokens, char c, RegexLexerState &state, int pos
 }
 
 // Analyses the current character in case of the end of an hex sequence.
-bool regexLexerHex2(vector<int> &tokens, char c, RegexLexerState &state, int pos) {
+bool regexLexerHex2(vector<int> &tokens, char c, RegexLexerState &state, size_t pos) {
 	int val; TOKEN_VAL(tokens.back(), val);
 	bool res = false;
 	if (c >= '0' && c <= '9') val = 16*val + c-'0';
@@ -190,7 +191,7 @@ bool regexLexerHex2(vector<int> &tokens, char c, RegexLexerState &state, int pos
 }
 
 // Analyses the character following (? to detect skip structure.
-bool regexLexerSkip(vector<int> &tokens, char c, RegexLexerState &state, int pos) {
+bool regexLexerSkip(vector<int> &tokens, char c, RegexLexerState &state, size_t pos) {
 	if (c == '!' || c == '=') {
 		state = REG_LEX_NONE;
 		tokens.push_back(TOKEN_MAKE(REG_TK_SKIP, c, pos));
@@ -220,13 +221,13 @@ bool regexLexer(const string &str, vector<int> &tokens) {
 	RegexLexerState state = REG_LEX_NONE; 	// Scanner state.
 
 	// For each char in the string.
-	int pos = 0;
+	size_t pos = 0;
 	while (pos < str.size()) {
 		c = str[pos];
 
 		// Detects ints in quantifiers.
 		if (flags[2] && (c == ',' || c == '}')) {
-			tokens.push_back(TOKEN_MAKE(REG_TK_INT, val, pos));
+			tokens.push_back(TOKEN_MAKE(REG_TK_INT, val, pos-1));
 			flags[2] = false;
 			val = 0;
 		}
@@ -264,16 +265,212 @@ bool regexLexer(const string &str, vector<int> &tokens) {
 
 // Error cases.
 ERROR_UNKNOWN_HEX:
+	tokens.push_back(TOKEN_MAKE(0,0, pos));
 	grcc::cerr << "unknown hex sequence: '\\x" 
 		<< ((state == REG_LEX_HEX_2) ? ""+str[pos-1] : "") << c << "'" << endl;  
 	return false;
 ERROR_UNKNOWN_ESCAPE:
+	tokens.push_back(TOKEN_MAKE(0,0, pos));
 	grcc::cerr << "unknown escape sequence: '\\" << c << "'" << endl;
 	return false;
 ERROR_UNKNOWN_SKIP:
+	tokens.push_back(TOKEN_MAKE(0,0, pos));
 	grcc::cerr << "unknown skip sequence: '(?" << c << "'" << endl;
 	return false;
 
+}
+
+
+
+
+
+
+// Prints a node and it's name.
+void printPreIndent(string str, int depth) {
+	grcc::cout << "";
+	for (int i = 0; i < depth; ++i) 
+		grcc::cout() << ((i == depth-1) ? "├╴" : "│ ");
+	grcc::cout() << BOLD << str << RST << endl;
+}
+
+// Prints the indent following a node.
+void printPostIndent(int depth) {
+	if (depth <= 0) return; 
+	grcc::cout << "";
+	for (int i = 0; i < depth; ++i) grcc::cout() << "│ ";
+	grcc::cout() << endl;
+}
+
+
+
+// Abstract class to represent an AST node.
+RegexTreeNode::RegexTreeNode() {}
+RegexTreeNode::~RegexTreeNode() {}
+
+// Node class that serves as the expression root.
+RegexTreeExpr::RegexTreeExpr() : m_node(nullptr), m_begin(false), m_end(false) {}
+RegexTreeExpr::~RegexTreeExpr() {if (m_node) delete m_node;}
+RegexTreeType RegexTreeExpr::getType() const {return REG_TREE_EXPR;}
+string RegexTreeExpr::to_string() const {
+	return (m_begin ? "^" : "") + (m_node ? m_node->to_string() : "") + (m_end ? "$" : "");
+}
+void RegexTreeExpr::print(int depth) const {
+	grcc::cout << BOLD << "Expr :" << RST << (m_begin ? " Begin" : "") 
+		<< (m_end ? " End" : "") << endl;
+	if (m_node) m_node->print(depth);
+	else grcc::cout << BOLD << "None" << RST << endl;
+}
+
+// Node class used to represent an union.
+RegexTreeUnion::RegexTreeUnion() : m_nodes() {}
+RegexTreeUnion::~RegexTreeUnion() {
+	for (RegexTreeNode *node : m_nodes) if (node) delete node;
+}
+RegexTreeType RegexTreeUnion::getType() const {return REG_TREE_UNION;}
+string RegexTreeUnion::to_string() const {
+	string str = m_nodes[0]->to_string();
+	for (auto it = m_nodes.begin()+1; it < m_nodes.end(); ++it) str += "|" + (*it)->to_string();
+	return str;
+}
+void RegexTreeUnion::print(int depth) const {
+	printPreIndent("Union", depth);
+	for (RegexTreeNode *node : m_nodes) if (node) node->print(depth+1);
+	printPostIndent(depth);
+}
+
+// Node class used to represent a concatenation.
+RegexTreeConcat::RegexTreeConcat() : m_nodes() {}
+RegexTreeConcat::~RegexTreeConcat() {
+	for (RegexTreeNode *node : m_nodes) if (node) delete node;
+}
+RegexTreeType RegexTreeConcat::getType() const {return REG_TREE_CONCAT;}
+string RegexTreeConcat::to_string() const {
+	string str = "";
+	for (const RegexTreeNode *node : m_nodes) {
+		bool u = node->getType() == REG_TREE_UNION;
+		str += (u ? "(" : "") + node->to_string() + (u ? ")" : "");
+	}
+	return str;
+}
+void RegexTreeConcat::print(int depth) const {
+	printPreIndent("Concat", depth);
+	for (RegexTreeNode *node : m_nodes) if (node) node->print(depth+1);
+	printPostIndent(depth);
+}
+
+// Node class used to represent a quantifier.
+RegexTreeQuant::RegexTreeQuant() : m_min(0), m_max(0) {}
+RegexTreeQuant::~RegexTreeQuant() {}
+bool RegexTreeQuant::isValid() const {
+	return m_max < 0 || (m_min <= m_max);
+}
+RegexTreeType RegexTreeQuant::getType() const {return REG_TREE_QUANT;}
+string RegexTreeQuant::to_string() const {
+	if (m_min == 1 && m_max == -1) return "+";
+	if (m_min == 0 && m_max == -1) return "*";
+	if (m_min == 0 && m_max == 1) return "?";
+	if (m_min == m_max) return "{" + std::to_string(m_min) + "}";
+	if (m_max == -1) return "{" + std::to_string(m_min) + ",}";
+	return "{" + std::to_string(m_min) + "," + std::to_string(m_max) + "}";
+}
+void RegexTreeQuant::print(int depth) const {
+	printPreIndent(string("Quant") + RST + " (" + std::to_string(m_min) + "," + std::to_string(m_max) + ")", depth);
+}
+
+// Node class used to represent an atom.
+RegexTreeAtom::RegexTreeAtom() : m_node(nullptr), m_quant(nullptr) {}
+RegexTreeAtom::~RegexTreeAtom() {
+	if (m_node) delete m_node;
+	if (m_quant) delete m_quant;
+}
+RegexTreeType RegexTreeAtom::getType() const {return REG_TREE_ATOM;}
+string RegexTreeAtom::to_string() const {
+	bool u = m_node->getType() == REG_TREE_UNION;
+	return (u ? "(" : "") + m_node->to_string() + (u ? ")" : "") + m_quant->to_string();
+}
+void RegexTreeAtom::print(int depth) const {
+	printPreIndent("Atom", depth);
+	if (m_node) m_node->print(depth+1);
+	if (m_quant) m_quant->print(depth+1);
+	printPostIndent(depth);
+}
+
+// Node class used to represent a skip sequence.
+RegexTreeSkip::RegexTreeSkip() : m_match(false), m_node(nullptr) {}
+RegexTreeSkip::~RegexTreeSkip() {if (m_node) delete m_node;}
+RegexTreeType RegexTreeSkip::getType() const {return REG_TREE_SKIP;}
+string RegexTreeSkip::to_string() const {
+	return (m_match ? "(?=" : "(?!") + m_node->to_string() + ")";
+}
+void RegexTreeSkip::print(int depth) const {
+	printPreIndent(string("Skip") + RST + " (" + string(m_match ? "match" : "unmatch") + ")", depth);	
+	if (m_node) m_node->print(depth+1);
+	printPostIndent(depth);
+}
+
+// Node class used to represent an union.
+RegexTreeClass::RegexTreeClass() : m_match(false), m_nodes() {}
+RegexTreeClass::~RegexTreeClass() {
+	for (RegexTreeNode *node : m_nodes) if (node) delete node;
+}
+RegexTreeType RegexTreeClass::getType() const {return REG_TREE_CLASS;}
+string RegexTreeClass::to_string() const {
+	string str = (m_match ? "[" : "[^");
+	for (const RegexTreeNode *node : m_nodes) str += node->to_string();
+	return str + "]";
+}
+void RegexTreeClass::print(int depth) const {
+	printPreIndent(string("Class") + RST + " (" + string(m_match ? "match" : "unmatch") + ")", depth);
+	for (const RegexTreeNode *node : m_nodes) if (node) node->print(depth+1);
+	printPostIndent(depth);
+}
+
+// Node class used to represent a litteral.
+RegexTreeLitt::RegexTreeLitt() : m_esc(false), m_val(0) {}
+RegexTreeLitt::~RegexTreeLitt() {}
+RegexTreeType RegexTreeLitt::getType() const {return REG_TREE_LITT;}
+string RegexTreeLitt::to_string() const {
+	if (m_esc) return "\\" + m_val;
+	else if (isgraph(m_val)) return string(1,m_val);
+	else {
+		switch (m_val) {
+			case '\n': return "\\n";
+			case '\t': return "\\t";
+			case '\r': return "\\r";
+			case '\v': return "\\v";
+			case '\f': return "\\f";
+			default: return "\\x" + format("{:02X}", m_val);
+		}
+	}
+}
+void RegexTreeLitt::print(int depth) const {
+	printPreIndent(
+		string("Litt") + RST + " (" + string(m_esc ? "escape, " : "char, ") + 
+		(isgraph(m_val) ? "'" + string(1,m_val) + "'" : "0x" + format("{:02X}", m_val)) + ")",
+		depth
+	);
+}
+
+// Node class used to represent a sequence of characters.
+RegexTreeSeq::RegexTreeSeq() : m_litt_min(nullptr), m_litt_max(nullptr) {}
+RegexTreeSeq::~RegexTreeSeq() {
+	if (m_litt_min) delete m_litt_min;
+	if (m_litt_max) delete m_litt_max;
+}
+bool RegexTreeSeq::isValid() const {
+	int min_val = m_litt_min->m_val;
+	int max_val = m_litt_max->m_val;
+	return min_val <= max_val;
+}
+RegexTreeType RegexTreeSeq::getType() const {return REG_TREE_SEQ;}
+string RegexTreeSeq::to_string() const {
+	return m_litt_min->to_string() + "-" + m_litt_max->to_string();
+}
+void RegexTreeSeq::print(int depth) const {
+	printPreIndent("Seq", depth);
+	if (m_litt_min) m_litt_min->print(depth+1);
+	if (m_litt_max) m_litt_max->print(depth+1);
+	printPostIndent(depth);
 }
 
 
@@ -285,7 +482,7 @@ bool regexParseUnion1(vector<int>::const_iterator &it, RegexTreeUnion *&node, bo
 	TOKEN_TYPE(*it, type);
 
 	// Checks if it's the end of the recursive union.
-	if (verbose) grcc::cout << "function regexParseUnion1 " << stringFromToken(*it) << endl;
+	if (verbose) grcc::cout << "searching for a recursive Union " << stringFromToken(*it) << endl;
 	if (TOKEN_CMP(*it, REG_TK_OP, '$') ||
 		TOKEN_CMP(*it, REG_TK_OP, ')') ||
 		type == REG_TK_EOE) {
@@ -312,7 +509,7 @@ bool regexParseConcat1(vector<int>::const_iterator &it, RegexTreeConcat *&node, 
 	char type; TOKEN_TYPE(*it, type);
 
 	// Checks if it's the end of the recursive concatenation.
-	if (verbose) grcc::cout << "function regexParseConcat1 " << stringFromToken(*it) << ")" << endl;
+	if (verbose) grcc::cout << "searching for a recursive Concat " << stringFromToken(*it) << ")" << endl;
 	if (TOKEN_CMP(*it, REG_TK_OP, '$') ||
 		TOKEN_CMP(*it, REG_TK_OP, '|') ||
 		TOKEN_CMP(*it, REG_TK_OP, ')') ||
@@ -342,23 +539,33 @@ bool regexParseAtom1(vector<int>::const_iterator &it, RegexTreeAtom *&node, bool
 	char type, val; TOKEN_SPLIT(*it, type, val);
 
 	// Checks if the content is an union.
-	if (verbose) grcc::cout << "function regexParseAtom1 " << stringFromToken(*it) << endl;
-	RegexTreeUnion *union_node = nullptr;
+	if (verbose) grcc::cout << "searching for a Union in an Atom " << stringFromToken(*it) << endl;
 	if (TOKEN_CMP(*it, REG_TK_OP, '(') ||
 		TOKEN_CMP(*it, REG_TK_OP, '[') ||
 		type == REG_TK_CHAR || type == REG_TK_ESC) {
 
 		// Parses the content of the parenthesis.
-		if (!regexParseUnion(it, union_node, verbose)) return false;
+		RegexTreeUnion *union_node = new RegexTreeUnion();
+		node->m_node = union_node;
+		if (!regexParseUnion(it, union_node, verbose)) {
+			grcc::cerr << "unclosed parenthesis. (op: ')') was expected, not " << stringFromToken(*it) << endl;
+			return false;
+		}
+
+		// Delete the union node if it contains only one element.
+		if (union_node->m_nodes.size() == 1) {
+			node->m_node = union_node->m_nodes[0];
+			union_node->m_nodes.clear();
+			delete union_node;
+		}
 
 		// Checks if the parenthesis is closed.
-		node->m_node = union_node;
 		if (!TOKEN_CMP(*it, REG_TK_OP, ')')) return false;
 		++it;
 
 		// Parses the quantifier if there is one.
 		if (!regexParseQuant(it, node->m_quant, verbose)) return false;
-		return true;
+		return !node->m_quant || node->m_quant->isValid();
 
 	// Checks if the content is a skip sequence.
 	} else if (type == REG_TK_SKIP) {
@@ -368,10 +575,18 @@ bool regexParseAtom1(vector<int>::const_iterator &it, RegexTreeAtom *&node, bool
 		++it;
 
 		// Parses the content of the skip sequence.
+		RegexTreeUnion *union_node = new RegexTreeUnion();
+		skip_node->m_node = union_node;
 		if (!regexParseUnion(it, union_node, verbose)) return false;
 
+		// Delete the union node if it contains only one element.
+		if (union_node->m_nodes.size() == 1) {
+			skip_node->m_node = union_node->m_nodes[0];
+			union_node->m_nodes.clear();
+			delete union_node;
+		}
+
 		// Checks if the skip sequence is closed.
-		skip_node->m_node = union_node;
 		if (!TOKEN_CMP(*it, REG_TK_OP, ')')) {
 			grcc::cerr << "unclosed skip sequence. (op: ')') was expected, not " << stringFromToken(*it) << endl;
 			return false;
@@ -391,8 +606,8 @@ bool regexParseQuant1(vector<int>::const_iterator &it, RegexTreeQuant *&node, bo
 	char type; TOKEN_TYPE(*it, type);
 
 	// Checks if the second number is explicitly given.
-	if (verbose) grcc::cout << "function regexParseQuant1 " << stringFromToken(*it) << endl;
-	if (type = REG_TK_INT) {
+	if (verbose) grcc::cout << "searching for the second int in a Quant " << stringFromToken(*it) << endl;
+	if (type == REG_TK_INT) {
 		TOKEN_VAL(*it, node->m_max);
 		++it;
 		if (!TOKEN_CMP(*it, REG_TK_OP, '}')) {
@@ -419,7 +634,7 @@ bool regexParseQuant1(vector<int>::const_iterator &it, RegexTreeQuant *&node, bo
 bool regexParseQuant2(vector<int>::const_iterator &it, RegexTreeQuant *&node, bool verbose) {
 
 	// If the quantifier ends here, it's max is it's min.
-	if (verbose) grcc::cout << "function regexParseQuant2 " << stringFromToken(*it) << endl;
+	if (verbose) grcc::cout << "searching for a Quant length " << stringFromToken(*it) << endl;
 	if (TOKEN_CMP(*it, REG_TK_OP, '}')) {
 		node->m_max = node->m_min;
 		++it;
@@ -445,7 +660,7 @@ bool regexParseLetter1(vector<int>::const_iterator &it, RegexTreeNode *&node, bo
 	char type; TOKEN_TYPE(*it, type);
 
 	// Initialises the class tree and checks if there is an exclusion operator.
-	if (verbose) grcc::cout << "function regexParseLetter1 " << stringFromToken(*it) << endl;
+	if (verbose) grcc::cout << "searching for an exclusion operator in a Class " << stringFromToken(*it) << endl;
 	RegexTreeClass *class_node = new RegexTreeClass();
 	node = class_node;
 	if (TOKEN_CMP(*it, REG_TK_OP, '^')) {
@@ -476,7 +691,7 @@ bool regexParseLetter1(vector<int>::const_iterator &it, RegexTreeNode *&node, bo
 // Detects a recursive class or the end of a class.
 bool regexParseClass1(vector<int>::const_iterator &it, RegexTreeClass *&node, bool verbose) {
 	char type; TOKEN_TYPE(*it, type);
-	if (verbose) grcc::cout << "function regexParseClass1 " << stringFromToken(*it) << endl;
+	if (verbose) grcc::cout << "searching for a recursive Class " << stringFromToken(*it) << endl;
 	if (TOKEN_CMP(*it, REG_TK_OP, ']')) return true;
 	if (type != REG_TK_CHAR && type != REG_TK_ESC) {
 		grcc::cerr << "a litteral was expected, not " << stringFromToken(*it) << endl;
@@ -489,10 +704,10 @@ bool regexParseClass1(vector<int>::const_iterator &it, RegexTreeClass *&node, bo
 // Parses the end of a class and a sequence in a class.
 bool regexParseElt1(vector<int>::const_iterator &it, 
 	vector<RegexTreeNode*> &nodes, RegexTreeLitt *&node, bool verbose) {
-	char type, val; TOKEN_SPLIT(*it, type, val);
+	char type; TOKEN_TYPE(*it, type);
 
 	// Checks if it's the end of the class or the beginning of a new element.
-	if (verbose) grcc::cout << "function regexParseElt1 " << stringFromToken(*it) << endl;
+	if (verbose) grcc::cout << "searching for a Seq... " << stringFromToken(*it) << endl;
 	if (TOKEN_CMP(*it, REG_TK_OP, ']') ||
 		type == REG_TK_CHAR || type == REG_TK_ESC) return true;
 	if (!TOKEN_CMP(*it, REG_TK_OP, '-')) {
@@ -503,23 +718,23 @@ bool regexParseElt1(vector<int>::const_iterator &it,
 
 	// Detects a litteral in case of an interval.
 	TOKEN_TYPE(*it, type);
-	if (type != REG_TK_CHAR && type != REG_TK_ESC) {
-		grcc::cerr << "a litteral was expected after (op: '-'), not " << stringFromToken(*it) << endl;
+	if (type != REG_TK_CHAR) {
+		grcc::cerr << "a character was expected, not " << stringFromToken(*it) << endl;
 		return false;
 	}
 	
 	// Here we are in a sequence.
 	// Detects the second litteral of a sequence.
-	if (verbose) grcc::cout << "a sequence was found " << stringFromToken(*it) << endl;
+	if (verbose) grcc::cout << "parsing a Seq " << stringFromToken(*it) << endl;
 	RegexTreeLitt *litt_node = new RegexTreeLitt();
 	regexParseLitt(it, litt_node, verbose);
-	
+
 	// Updates the last tree node.
 	RegexTreeSeq *seq_node = new RegexTreeSeq();
 	seq_node->m_litt_min = node;
 	seq_node->m_litt_max = litt_node;
 	nodes.back() = seq_node;
-	return true;
+	return seq_node->isValid();
 
 }
 
@@ -529,21 +744,20 @@ bool regexParseElt1(vector<int>::const_iterator &it,
 // Parses a litteral.
 void regexParseLitt(vector<int>::const_iterator &it, RegexTreeLitt *&node, bool verbose) {
 	char type, val; TOKEN_SPLIT(*it, type, val);
-	if (verbose) grcc::cout << "parsing litteral " << stringFromToken(*it) << endl;
+	if (verbose) grcc::cout << "a litteral was found " << stringFromToken(*it) << endl;
 	node->m_esc = (type == REG_TK_ESC);	
 	node->m_val = val;
 	++it;
 }
 
 // Parses an element from a class.
-bool regexParseElt(vector<int>::const_iterator &it, std::vector<RegexTreeNode*> &nodes, bool verbose) {
-	char type;
-	TOKEN_TYPE(*it, type);
+bool regexParseElt(vector<int>::const_iterator &it, vector<RegexTreeNode*> &nodes, bool verbose) {
+	char type; TOKEN_TYPE(*it, type);
 
 	// Detects if the element starts with a litteral.
-	if (verbose) grcc::cout << "function regexParseElt " << stringFromToken(*it) << endl;
-	if (type != REG_TK_CHAR && type != REG_TK_ESC) {
-		grcc::cerr << "a litteral was expected, not " << stringFromToken(*it) << endl;
+	if (verbose) grcc::cout << "parsing en Elt from a Class " << stringFromToken(*it) << endl;
+	if (type != REG_TK_CHAR) {
+		grcc::cerr << "a character was expected, not " << stringFromToken(*it) << endl;
 		return false;
 	}
 	RegexTreeLitt *litt_node = new RegexTreeLitt();
@@ -561,7 +775,7 @@ bool regexParseClass(vector<int>::const_iterator &it, RegexTreeClass *&node, boo
 	char type; TOKEN_TYPE(*it, type);
 
 	// Checks if the content of the class starts with a litteral.
-	if (verbose) grcc::cout << "function regexParseClass " << stringFromToken(*it) << endl;
+	if (verbose) grcc::cout << "parsing a Class " << stringFromToken(*it) << endl;
 	if (type != REG_TK_CHAR && type != REG_TK_ESC) {
 		grcc::cerr << "a litteral was expected, not " << stringFromToken(*it) << endl;
 		return false;
@@ -580,7 +794,7 @@ bool regexParseLetter(vector<int>::const_iterator &it, RegexTreeNode *&node, boo
 	TOKEN_TYPE(*it, type);
 
 	// Checks if the letter is a litteral.
-	if (verbose) grcc::cout << "function regexParseLetter " << stringFromToken(*it) << endl;
+	if (verbose) grcc::cout << "parsing a Letter " << stringFromToken(*it) << endl;
 	node = new RegexTreeQuant();
 	if (type == REG_TK_CHAR || type == REG_TK_ESC) {
 		RegexTreeLitt *litt_node = new RegexTreeLitt();
@@ -606,7 +820,7 @@ bool regexParseQuant(vector<int>::const_iterator &it, RegexTreeQuant *&node, boo
 	char type; TOKEN_TYPE(*it, type);
 
 	// Continues if there might be a quantifier.
-	if (verbose) grcc::cout << "function regexParseQuant " << stringFromToken(*it) << endl;
+	if (verbose) grcc::cout << "parsing a Quant " << stringFromToken(*it) << endl;
 	if (TOKEN_CMP(*it, REG_TK_OP, '$') ||
 		TOKEN_CMP(*it, REG_TK_OP, '|') ||
 		TOKEN_CMP(*it, REG_TK_OP, '(') ||
@@ -665,11 +879,16 @@ bool regexParseAtom(vector<int>::const_iterator &it, RegexTreeAtom *&node, bool 
 	char type; TOKEN_TYPE(*it, type);
 
 	// Checks if the atom is a letter.
-	if (verbose) grcc::cout << "function regexParseAtom " << stringFromToken(*it) << endl;
+	if (verbose) grcc::cout << "parsing an Atom " << stringFromToken(*it) << endl;
 	if (TOKEN_CMP(*it, REG_TK_OP, '[') ||
 		type == REG_TK_CHAR || type == REG_TK_ESC) {
 		if (!regexParseLetter(it, node->m_node, verbose)) return false;
 		if (!regexParseQuant(it, node->m_quant, verbose)) return false;
+		if (node->m_quant && !node->m_quant->isValid()) {
+			grcc::cerr << "quantifier upper bound can't be lower than lower bound" << endl;
+			it-=2;
+			return false;
+		}
 		return true;
 
 	// Checks if the atom is a parenthesis containing something.
@@ -691,13 +910,31 @@ bool regexParseConcat(vector<int>::const_iterator &it, RegexTreeConcat *&node, b
 	TOKEN_TYPE(*it, type);
 	
 	// Parses the first element of the concatenation, then try to detect a recursive concatenation.
-	if (verbose) grcc::cout << "function regexParseConcat " << stringFromToken(*it) << endl;
+	if (verbose) grcc::cout << "parsing a Concat " << stringFromToken(*it) << endl;
 	if (TOKEN_CMP(*it, REG_TK_OP, '(') ||
 		TOKEN_CMP(*it, REG_TK_OP, '[') ||
 		type == REG_TK_CHAR || type == REG_TK_ESC) {
 		RegexTreeAtom* atom_node = new RegexTreeAtom();
 		node->m_nodes.push_back(atom_node);
 		if (!regexParseAtom(it, atom_node, verbose)) return false;
+		
+		// Delete the atom node if it contains only one element.
+		if (!atom_node->m_quant) {
+			node->m_nodes.back() = atom_node->m_node;
+			atom_node->m_node = nullptr;
+			delete atom_node;
+		}
+
+		// Fuse the concatenation with it's child if it's also a concatenation.
+		if (node->m_nodes.back()->getType() == REG_TREE_CONCAT) {
+			RegexTreeConcat *concat_node = dynamic_cast<RegexTreeConcat*>(node->m_nodes.back());
+			node->m_nodes.pop_back();
+			node->m_nodes.insert(node->m_nodes.end(), concat_node->m_nodes.begin(), concat_node->m_nodes.end());
+			concat_node->m_nodes.clear();
+			delete concat_node;
+		}
+
+		// Then parse the end of the concatenation.
 		if (!regexParseConcat1(it, node, verbose)) return false;
 		return true;
 	}
@@ -713,13 +950,31 @@ bool regexParseUnion(vector<int>::const_iterator &it, RegexTreeUnion *&node, boo
 	char type; TOKEN_TYPE(*it, type);
 
 	// Parses the first element of the union, then try to detect a recursive union.
-	if (verbose) grcc::cout << "function regexParseUnion " << stringFromToken(*it) << endl;
+	if (verbose) grcc::cout << "parsing an Union " << stringFromToken(*it) << endl;
 	if (TOKEN_CMP(*it, REG_TK_OP, '(') ||
 		TOKEN_CMP(*it, REG_TK_OP, '[') ||
 		type == REG_TK_CHAR || type == REG_TK_ESC) {
 		RegexTreeConcat *concat_node = new RegexTreeConcat();
 		node->m_nodes.push_back(concat_node);
 		if (!regexParseConcat(it, concat_node, verbose)) return false;
+
+		// Delete the concatenation node if it contains only one element.
+		if (concat_node->m_nodes.size() == 1) {
+			node->m_nodes.back() = concat_node->m_nodes[0];
+			concat_node->m_nodes.clear();
+			delete concat_node;
+		}
+
+		// Fuse the union with it's child if it's also a union.
+		if (node->m_nodes.back()->getType() == REG_TREE_UNION) {
+			RegexTreeUnion *union_node = dynamic_cast<RegexTreeUnion*>(node->m_nodes.back());
+			node->m_nodes.pop_back();
+			node->m_nodes.insert(node->m_nodes.end(), union_node->m_nodes.begin(), union_node->m_nodes.end());
+			union_node->m_nodes.clear();
+			delete union_node;
+		}
+
+		// The parse the end of the union.
 		if (!regexParseUnion1(it, node, verbose)) return false;
 		return true;
 	}
@@ -735,7 +990,7 @@ bool regexParseEnd(vector<int>::const_iterator &it, bool &end, bool verbose) {
 	char type; TOKEN_TYPE(*it, type);
 	
 	// Detects the ending operator.
-	if (verbose) grcc::cout << "function regexParseEnd " << stringFromToken(*it) << endl;
+	if (verbose) grcc::cout << "parsing an ending operator " << stringFromToken(*it) << endl;
 	if (TOKEN_CMP(*it, REG_TK_OP, '$') ) {
 		if (verbose) grcc::cout << "ending operator found" << endl;
 		++it;
@@ -759,7 +1014,7 @@ bool regexParseBegin(vector<int>::const_iterator &it, bool &begin, bool verbose)
 	char type; TOKEN_TYPE(*it, type);
 
 	// Detects the beginning operator.
-	if (verbose) grcc::cout << "function regexParseBegin " << stringFromToken(*it) << endl;
+	if (verbose) grcc::cout << "parsing a beginning operator " << stringFromToken(*it) << endl;
 	if (TOKEN_CMP(*it, REG_TK_OP, '^')) {
 		if (verbose) grcc::cout << "beginnig operator found" << endl;
 		++it;
@@ -782,11 +1037,14 @@ bool regexParseBegin(vector<int>::const_iterator &it, bool &begin, bool verbose)
 
 // Parses a regex and returns the corresponding AST.
 bool regexParseExpr(vector<int>::const_iterator &it, RegexTreeExpr &tree, bool verbose) {
-	char type;
-	TOKEN_TYPE(*it, type);
+	char type; TOKEN_TYPE(*it, type);
+	if (type == REG_TK_EOE) {
+		tree = RegexTreeExpr();
+		return true;
+	}
 
 	// Detects the ending operator.
-	if (verbose) grcc::cout << "function regexParseExpr " << stringFromToken(*it) << endl;
+	if (verbose) grcc::cout << "parsing an Expr " << stringFromToken(*it) << endl;
 	if (TOKEN_CMP(*it, REG_TK_OP, '^') ||
 		TOKEN_CMP(*it, REG_TK_OP, '(') ||
 		TOKEN_CMP(*it, REG_TK_OP, '[') ||
@@ -799,6 +1057,13 @@ bool regexParseExpr(vector<int>::const_iterator &it, RegexTreeExpr &tree, bool v
 			!regexParseEnd(it, tree.m_end, verbose)) {
 			grcc::cerr << "unable to parse the regex" << endl;
 			return false;
+		}
+
+		// Delete the union node if it contains only one element.
+		if (union_node->m_nodes.size() == 1) {
+			tree.m_node = union_node->m_nodes[0];
+			union_node->m_nodes.clear();
+			delete union_node;
 		}
 		return true;
 	}
@@ -815,7 +1080,7 @@ bool regexParseExpr(vector<int>::const_iterator &it, RegexTreeExpr &tree, bool v
 // This function build the AST of a given regex in str.
 // verbose activate the verbose mode, which prints a lot of additional
 // informations regarding the parsing process.
-bool regexParser(const string &str, bool verbose) {
+bool regexParser(RegexTreeExpr &tree, const string &str, bool verbose) {
 
 	// Gets the list of tokens from the expression string.
 	vector<int> tokens;
@@ -823,7 +1088,7 @@ bool regexParser(const string &str, bool verbose) {
 		int pos; TOKEN_POS(tokens.back(), pos);
 		grcc::cerr << "the lexer was unable to treat the regex :" << endl;
 		grcc::cerr << str << endl;
-		grcc::cerr << RED << (string(pos+1, ' ').replace(pos,1,"^")) << "- here's the issue" << RST << endl;
+		grcc::cerr << BOLD << (string(pos+1, ' ').replace(pos,1,"^")) << "- here's the issue" << RST << endl;
 		return false;
 	}
 
@@ -831,7 +1096,7 @@ bool regexParser(const string &str, bool verbose) {
 	if (verbose) {
 		grcc::cout << BOLD << "Lexical analysis" << RST << endl;
 		grcc::cout << "detected tokens : " ;
-		for (int i = 0; i < tokens.size(); ++i) {
+		for (size_t i = 0; i < tokens.size(); ++i) {
 			grcc::cout() << stringFromToken(tokens[i]);
 			if (i < tokens.size()-1) grcc::cout() << ", ";
 		}
@@ -840,7 +1105,6 @@ bool regexParser(const string &str, bool verbose) {
 	}
 
 	// Finally, parses the tree and prints it in verbose mode.
-	RegexTreeExpr tree;
 	vector<int>::const_iterator it = tokens.begin();
 	if (!regexParseExpr(it, tree, verbose)) {
 		int pos; TOKEN_POS(*it, pos);
@@ -857,132 +1121,4 @@ bool regexParser(const string &str, bool verbose) {
 	}
 	return true;
 
-}
-
-
-
-// Prints a node and it's name.
-void printPreIndent(string str, int depth) {
-	grcc::cout << "";
-	for (int i = 0; i < depth; ++i) 
-		grcc::cout() << ((i == depth-1) ? "├╴" : "│ ");
-	grcc::cout() << BOLD << str << RST << endl;
-}
-
-// Prints the indent following a node.
-void printPostIndent(int depth) {
-	if (depth-1 <= 0) return; 
-	grcc::cout << "";
-	for (int i = 0; i < depth-1; ++i) grcc::cout() << "│ ";
-	grcc::cout() << endl;
-}
-
-
-
-// Abstract class to represent an AST node.
-RegexTreeNode::RegexTreeNode() {}
-RegexTreeNode::~RegexTreeNode() {}
-
-// Node class that serves as the expression root.
-RegexTreeExpr::RegexTreeExpr() : m_begin(false), m_end(false), m_node(nullptr) {}
-RegexTreeExpr::~RegexTreeExpr() {if (m_node) delete m_node;}
-RegexTreeType RegexTreeExpr::getType() const {return REG_TREE_EXPR;}
-void RegexTreeExpr::print(int depth) const {
-	grcc::cout << BOLD << "Expr :" << RST << (m_begin ? " Begin" : "") 
-		<< (m_end ? " End" : "") << endl;
-	m_node->print(0);
-}
-
-// Node class used to represent an union.
-RegexTreeUnion::RegexTreeUnion() : m_nodes() {}
-RegexTreeUnion::~RegexTreeUnion() {
-	for (RegexTreeNode *node : m_nodes) if (node) delete node;
-}
-RegexTreeType RegexTreeUnion::getType() const {return REG_TREE_UNION;}
-void RegexTreeUnion::print(int depth) const {
-	printPreIndent("Union", depth);
-	for (RegexTreeNode *node : m_nodes) if (node) node->print(depth+1);
-	printPostIndent(depth);
-}
-
-// Node class used to represent a concatenation.
-RegexTreeConcat::RegexTreeConcat() : m_nodes() {}
-RegexTreeConcat::~RegexTreeConcat() {
-	for (RegexTreeNode *node : m_nodes) if (node) delete node;
-}
-RegexTreeType RegexTreeConcat::getType() const {return REG_TREE_CONCAT;}
-void RegexTreeConcat::print(int depth) const {
-	printPreIndent("Concat", depth);
-	for (RegexTreeNode *node : m_nodes) if (node) node->print(depth+1);
-	printPostIndent(depth);
-}
-
-// Node class used to represent a quantifier.
-RegexTreeQuant::RegexTreeQuant() : m_min(0), m_max(0) {}
-RegexTreeQuant::~RegexTreeQuant() {}
-RegexTreeType RegexTreeQuant::getType() const {return REG_TREE_QUANT;}
-void RegexTreeQuant::print(int depth) const {
-	printPreIndent(string("Quant") + RST + " (" + std::to_string(m_min) + "," + std::to_string(m_max) + ")", depth);
-}
-
-// Node class used to represent an atom.
-RegexTreeAtom::RegexTreeAtom() : m_node(nullptr), m_quant(nullptr) {}
-RegexTreeAtom::~RegexTreeAtom() {
-	if (m_node) delete m_node;
-	if (m_quant) delete m_quant;
-}
-RegexTreeType RegexTreeAtom::getType() const {return REG_TREE_ATOM;}
-void RegexTreeAtom::print(int depth) const {
-	printPreIndent("Atom", depth);
-	if (m_node) m_node->print(depth+1);
-	if (m_quant) m_quant->print(depth+1);
-	printPostIndent(depth);
-}
-
-// Node class used to represent a skip sequence.
-RegexTreeSkip::RegexTreeSkip() : m_match(false), m_node(nullptr) {}
-RegexTreeSkip::~RegexTreeSkip() {if (m_node) delete m_node;}
-RegexTreeType RegexTreeSkip::getType() const {return REG_TREE_SKIP;}
-void RegexTreeSkip::print(int depth) const {
-	printPreIndent(string("Skip") + RST + " (" + string(m_match ? "match" : "unmatch") + ")", depth);	
-	if (m_node) m_node->print(depth+1);
-	printPostIndent(depth);
-}
-
-// Node class used to represent an union.
-RegexTreeClass::RegexTreeClass() : m_match(false), m_nodes() {}
-RegexTreeClass::~RegexTreeClass() {
-	for (RegexTreeNode *node : m_nodes) if (node) delete node;
-}
-RegexTreeType RegexTreeClass::getType() const {return REG_TREE_CLASS;}
-void RegexTreeClass::print(int depth) const {
-	printPreIndent(string("Class") + RST + " (" + string(m_match ? "match" : "unmatch") + ")", depth);
-	for (RegexTreeNode *node : m_nodes) if (node) node->print(depth+1);
-	printPostIndent(depth);
-}
-
-// Node class used to represent a litteral.
-RegexTreeLitt::RegexTreeLitt() : m_esc(false), m_val(0) {}
-RegexTreeLitt::~RegexTreeLitt() {}
-RegexTreeType RegexTreeLitt::getType() const {return REG_TREE_LITT;}
-void RegexTreeLitt::print(int depth) const {
-	printPreIndent(
-		string("Litt") + RST + " (" + string(m_esc ? "escape, " : "char, ") + 
-		(std::isgraph(m_val) ? "'" + string(1,m_val) + "'" : "0x" + std::format("{:02X}", m_val)) + ")",
-		depth
-	);
-}
-
-// Node class used to represent a sequence of characters.
-RegexTreeSeq::RegexTreeSeq() : m_litt_min(nullptr), m_litt_max(nullptr) {}
-RegexTreeSeq::~RegexTreeSeq() {
-	if (m_litt_min) delete m_litt_min;
-	if (m_litt_max) delete m_litt_max;
-}
-RegexTreeType RegexTreeSeq::getType() const {return REG_TREE_SEQ;}
-void RegexTreeSeq::print(int depth) const {
-	printPreIndent("Seq", depth);
-	if (m_litt_min) m_litt_min->print(depth+1);
-	if (m_litt_max) m_litt_max->print(depth+1);
-	printPostIndent(depth);
 }
