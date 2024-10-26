@@ -72,19 +72,12 @@ string stringFromToken(int tk) {
 
 // Analyses the current character in case of a new token.
 void regexLexerNone(const string &str, int &val, vector<int> &tokens, 
-	char c, RegexLexerState &state, bool flags[2], size_t pos) {
+	char c, RegexLexerState &state, bool flags[3], size_t pos) {
 	switch(c) {
 	// Case of a start-line operator or a negation operator.
 	case '^':
-		if (!pos || str[pos-1] == '[') 
-			tokens.push_back(TOKEN_MAKE(REG_TK_OP, '^', pos));
+		if (pos > 0 && str[pos-1] == '[') tokens.push_back(TOKEN_MAKE(REG_TK_OP, '^', pos));
 		else tokens.push_back(TOKEN_MAKE(REG_TK_CHAR, '^', pos));
-		break;
-	// Case of an end-line operator.
-	case '$':
-		if (pos == str.size()-1) 
-			tokens.push_back(TOKEN_MAKE(REG_TK_OP, '$', pos));
-		else tokens.push_back(TOKEN_MAKE(REG_TK_CHAR, '$', pos));
 		break;
 	// Case of the point representing all charaters.
 	case '.':
@@ -194,6 +187,7 @@ bool regexLexerHex2(vector<int> &tokens, char c, RegexLexerState &state, size_t 
 bool regexLexerSkip(vector<int> &tokens, char c, RegexLexerState &state, size_t pos) {
 	if (c == '!' || c == '=') {
 		state = REG_LEX_NONE;
+		tokens.pop_back();
 		tokens.push_back(TOKEN_MAKE(REG_TK_SKIP, c, pos));
 	} else return true;
 	return false;
@@ -201,7 +195,7 @@ bool regexLexerSkip(vector<int> &tokens, char c, RegexLexerState &state, size_t 
 
 // Analyses the character following ( to detect skip structure.
 void regexLexerBrk(const string &str, int &val, vector<int> &tokens, 
-	char c, RegexLexerState &state, bool flags[2], int pos) {
+	char c, RegexLexerState &state, bool flags[3], int pos) {
 	state = REG_LEX_NONE;
 	if (c == '?') state = REG_LEX_SKIP;
 	else regexLexerNone(str, val, tokens, c, state, flags, pos);
@@ -282,9 +276,6 @@ ERROR_UNKNOWN_SKIP:
 
 
 
-
-
-
 // Prints a node and it's name.
 void printPreIndent(string str, int depth) {
 	grcc::cout << "";
@@ -308,16 +299,21 @@ RegexTreeNode::RegexTreeNode() {}
 RegexTreeNode::~RegexTreeNode() {}
 
 // Node class that serves as the expression root.
-RegexTreeExpr::RegexTreeExpr() : m_node(nullptr), m_begin(false), m_end(false) {}
-RegexTreeExpr::~RegexTreeExpr() {if (m_node) delete m_node;}
+RegexTreeExpr::RegexTreeExpr() : m_node(nullptr), m_skip(nullptr), m_match(true) {}
+RegexTreeExpr::~RegexTreeExpr() {
+	if (m_node) delete m_node;
+	if (m_skip) delete m_skip;
+}
 RegexTreeType RegexTreeExpr::getType() const {return REG_TREE_EXPR;}
 string RegexTreeExpr::to_string() const {
-	return (m_begin ? "^" : "") + (m_node ? m_node->to_string() : "") + (m_end ? "$" : "");
+	return (m_node ? m_node->to_string() : "") + 
+	(m_skip ? ("(?" + string(m_match ? "=" : "!") + m_skip->to_string() + ")") : "");
 }
 void RegexTreeExpr::print(int depth) const {
-	grcc::cout << BOLD << "Expr :" << RST << (m_begin ? " Begin" : "") 
-		<< (m_end ? " End" : "") << endl;
+	grcc::cout << BOLD << "Expr :" << RST << endl;
 	if (m_node) m_node->print(depth);
+	grcc::cout << BOLD << "Followed by (" << RST << (m_match ? "matching)" : "unmatching)") << endl;
+	if (m_skip) m_skip->print(depth);
 	else grcc::cout << BOLD << "None" << RST << endl;
 }
 
@@ -483,9 +479,8 @@ bool regexParseUnion1(vector<int>::const_iterator &it, RegexTreeUnion *&node, bo
 
 	// Checks if it's the end of the recursive union.
 	if (verbose) grcc::cout << "searching for a recursive Union " << stringFromToken(*it) << endl;
-	if (TOKEN_CMP(*it, REG_TK_OP, '$') ||
-		TOKEN_CMP(*it, REG_TK_OP, ')') ||
-		type == REG_TK_EOE) {
+	if (TOKEN_CMP(*it, REG_TK_OP, ')') ||
+		type == REG_TK_EOE || type == REG_TK_SKIP) {
 		return true;
 
 	// Else checks if the recursion continue.
@@ -510,10 +505,9 @@ bool regexParseConcat1(vector<int>::const_iterator &it, RegexTreeConcat *&node, 
 
 	// Checks if it's the end of the recursive concatenation.
 	if (verbose) grcc::cout << "searching for a recursive Concat " << stringFromToken(*it) << ")" << endl;
-	if (TOKEN_CMP(*it, REG_TK_OP, '$') ||
-		TOKEN_CMP(*it, REG_TK_OP, '|') ||
+	if (TOKEN_CMP(*it, REG_TK_OP, '|') ||
 		TOKEN_CMP(*it, REG_TK_OP, ')') ||
-		type == REG_TK_EOE) {
+		type == REG_TK_EOE || type == REG_TK_SKIP) {
 		return true;
 
 	// Else checks if the recursion continue.
@@ -530,73 +524,6 @@ bool regexParseConcat1(vector<int>::const_iterator &it, RegexTreeConcat *&node, 
 	// Error detected.
 	grcc::cerr << "(op: '$'), (op: '|'), (op: ')'), (op: '('), (op: '['), litteral or EOE was expected, not "
 		<< stringFromToken(*it) << endl;
-	return false;
-
-}
-
-// Parses the content of parenthesis in an atom.
-bool regexParseAtom1(vector<int>::const_iterator &it, RegexTreeAtom *&node, bool verbose) {
-	char type, val; TOKEN_SPLIT(*it, type, val);
-
-	// Checks if the content is an union.
-	if (verbose) grcc::cout << "searching for a Union in an Atom " << stringFromToken(*it) << endl;
-	if (TOKEN_CMP(*it, REG_TK_OP, '(') ||
-		TOKEN_CMP(*it, REG_TK_OP, '[') ||
-		type == REG_TK_CHAR || type == REG_TK_ESC) {
-
-		// Parses the content of the parenthesis.
-		RegexTreeUnion *union_node = new RegexTreeUnion();
-		node->m_node = union_node;
-		if (!regexParseUnion(it, union_node, verbose)) {
-			grcc::cerr << "unclosed parenthesis. (op: ')') was expected, not " << stringFromToken(*it) << endl;
-			return false;
-		}
-
-		// Delete the union node if it contains only one element.
-		if (union_node->m_nodes.size() == 1) {
-			node->m_node = union_node->m_nodes[0];
-			union_node->m_nodes.clear();
-			delete union_node;
-		}
-
-		// Checks if the parenthesis is closed.
-		if (!TOKEN_CMP(*it, REG_TK_OP, ')')) return false;
-		++it;
-
-		// Parses the quantifier if there is one.
-		if (!regexParseQuant(it, node->m_quant, verbose)) return false;
-		return !node->m_quant || node->m_quant->isValid();
-
-	// Checks if the content is a skip sequence.
-	} else if (type == REG_TK_SKIP) {
-		RegexTreeSkip *skip_node = new RegexTreeSkip();
-		skip_node->m_match = (val == '=');
-		node->m_node = skip_node;
-		++it;
-
-		// Parses the content of the skip sequence.
-		RegexTreeUnion *union_node = new RegexTreeUnion();
-		skip_node->m_node = union_node;
-		if (!regexParseUnion(it, union_node, verbose)) return false;
-
-		// Delete the union node if it contains only one element.
-		if (union_node->m_nodes.size() == 1) {
-			skip_node->m_node = union_node->m_nodes[0];
-			union_node->m_nodes.clear();
-			delete union_node;
-		}
-
-		// Checks if the skip sequence is closed.
-		if (!TOKEN_CMP(*it, REG_TK_OP, ')')) {
-			grcc::cerr << "unclosed skip sequence. (op: ')') was expected, not " << stringFromToken(*it) << endl;
-			return false;
-		}
-		++it;
-		return true;
-	}
-
-	// Error detected.
-	grcc::cerr << "(op: '('), (op: '[') or litteral was expected, not " << stringFromToken(*it) << endl;
 	return false;
 
 }
@@ -774,10 +701,10 @@ bool regexParseElt(vector<int>::const_iterator &it, vector<RegexTreeNode*> &node
 bool regexParseClass(vector<int>::const_iterator &it, RegexTreeClass *&node, bool verbose) {
 	char type; TOKEN_TYPE(*it, type);
 
-	// Checks if the content of the class starts with a litteral.
+	// Checks if the content of the class starts with a character.
 	if (verbose) grcc::cout << "parsing a Class " << stringFromToken(*it) << endl;
-	if (type != REG_TK_CHAR && type != REG_TK_ESC) {
-		grcc::cerr << "a litteral was expected, not " << stringFromToken(*it) << endl;
+	if (type != REG_TK_CHAR) {
+		grcc::cerr << "a character was expected, not " << stringFromToken(*it) << endl;
 		return false;
 	}
 
@@ -821,14 +748,12 @@ bool regexParseQuant(vector<int>::const_iterator &it, RegexTreeQuant *&node, boo
 
 	// Continues if there might be a quantifier.
 	if (verbose) grcc::cout << "parsing a Quant " << stringFromToken(*it) << endl;
-	if (TOKEN_CMP(*it, REG_TK_OP, '$') ||
-		TOKEN_CMP(*it, REG_TK_OP, '|') ||
+	if (TOKEN_CMP(*it, REG_TK_OP, '|') ||
 		TOKEN_CMP(*it, REG_TK_OP, '(') ||
 		TOKEN_CMP(*it, REG_TK_OP, ')') ||
 		TOKEN_CMP(*it, REG_TK_OP, '[') ||
-		type == REG_TK_CHAR || 
-		type == REG_TK_ESC || 
-		type == REG_TK_EOE) return true;
+		type == REG_TK_CHAR || type == REG_TK_ESC || 
+		type == REG_TK_EOE || type == REG_TK_SKIP) return true;
 	
 	// Matches the quantifier.
 	// + corresponds to at least one : [1..+oo[.
@@ -883,31 +808,49 @@ bool regexParseAtom(vector<int>::const_iterator &it, RegexTreeAtom *&node, bool 
 	if (TOKEN_CMP(*it, REG_TK_OP, '[') ||
 		type == REG_TK_CHAR || type == REG_TK_ESC) {
 		if (!regexParseLetter(it, node->m_node, verbose)) return false;
-		if (!regexParseQuant(it, node->m_quant, verbose)) return false;
-		if (node->m_quant && !node->m_quant->isValid()) {
-			grcc::cerr << "quantifier upper bound can't be lower than lower bound" << endl;
-			it-=2;
-			return false;
-		}
-		return true;
 
 	// Checks if the atom is a parenthesis containing something.
 	} else if (TOKEN_CMP(*it, REG_TK_OP, '(')) {
 		++it;
-		if (!regexParseAtom1(it, node, verbose)) return false;;
-		return true;
+		RegexTreeUnion *union_node = new RegexTreeUnion();
+		node->m_node = union_node;
+		if (!regexParseUnion(it, union_node, verbose)) return false;
+
+		// Delete the union node if it contains only one element.
+		if (union_node->m_nodes.size() == 1) {
+			node->m_node = union_node->m_nodes[0];
+			union_node->m_nodes.clear();
+			delete union_node;
+		}
+
+		// Detects the closing parenthesis.
+		if (!TOKEN_CMP(*it, REG_TK_OP, ')')) {
+			grcc::cerr << "(op: '(') was expected, not " << stringFromToken(*it) << endl;
+			return false;
+		}
+		++it;
+	
+	// Error detected.
+	} else {
+		grcc::cerr << "(op: '('), (op: '[') or a litteral was expected, not " 
+			<< stringFromToken(*it) << endl;
+		return false;
 	}
 
-	// Error detected.
-	grcc::cerr << "(op: '('), (op: '[') or a litteral was expected, not " << stringFromToken(*it) << endl;
-	return false;
+	// Parse the quantifier if there is one.
+	if (!regexParseQuant(it, node->m_quant, verbose)) return false;
+	if (node->m_quant && !node->m_quant->isValid()) {
+		grcc::cerr << "quantifier upper bound can't be lower than lower bound" << endl;
+		it-=2;
+		return false;
+	}
+	return true;
 
 }
 
 // Parses a concatenation of elements.
 bool regexParseConcat(vector<int>::const_iterator &it, RegexTreeConcat *&node, bool verbose) {
-	char type;
-	TOKEN_TYPE(*it, type);
+	char type; TOKEN_TYPE(*it, type);
 	
 	// Parses the first element of the concatenation, then try to detect a recursive concatenation.
 	if (verbose) grcc::cout << "parsing a Concat " << stringFromToken(*it) << endl;
@@ -985,52 +928,42 @@ bool regexParseUnion(vector<int>::const_iterator &it, RegexTreeUnion *&node, boo
 
 }
 
-// Parses the ending operator.
-bool regexParseEnd(vector<int>::const_iterator &it, bool &end, bool verbose) {
-	char type; TOKEN_TYPE(*it, type);
+// Parses the ending skip sequence.
+bool regexParseEnd(vector<int>::const_iterator &it, RegexTreeNode *&node, bool &match, bool verbose) {
+	char type, val; TOKEN_SPLIT(*it, type, val);
 	
-	// Detects the ending operator.
-	if (verbose) grcc::cout << "parsing an ending operator " << stringFromToken(*it) << endl;
-	if (TOKEN_CMP(*it, REG_TK_OP, '$') ) {
-		if (verbose) grcc::cout << "ending operator found" << endl;
+	// If it's the end of the regex, return.
+	if (verbose) grcc::cout << "parsing an End " << stringFromToken(*it) << endl;
+	if (type == REG_TK_EOE) return true;
+	else if (type == REG_TK_SKIP) {
+		match = val == '=';
 		++it;
-		end = true;
+
+		// Parse the content of the skip sequence.
+		if (verbose) grcc::cout << "a skip sequence was found " << stringFromToken(*it) << endl;
+		RegexTreeUnion *union_node = new RegexTreeUnion();
+		node = union_node;
+		if (!regexParseUnion(it, union_node, verbose)) return false;
+
+		// Delete the union node if it contains only one element.
+		if (union_node->m_nodes.size() == 1) {
+			node = union_node->m_nodes[0];
+			union_node->m_nodes.clear();
+			delete union_node;
+		}
+
+		// Finlly, parse the closing parenthesis.
+		if (!TOKEN_CMP(*it, REG_TK_OP, ')')) {
+			grcc::cerr << "(op: ')') was expected, not " << stringFromToken(*it) << endl;
+			return false;
+		}
+		++it;
 		return true;
 
-	// Else detects the end of the regex.
-	} else if (type == REG_TK_EOE) {
-		end = false;
-		return true;
 	}
 
 	// Error detected.
-	grcc::cerr << "(op: '$'), or EOE was expected, not " << stringFromToken(*it) << endl;
-	return false;
-
-}
-
-// Parses the beggining operator.
-bool regexParseBegin(vector<int>::const_iterator &it, bool &begin, bool verbose) {
-	char type; TOKEN_TYPE(*it, type);
-
-	// Detects the beginning operator.
-	if (verbose) grcc::cout << "parsing a beginning operator " << stringFromToken(*it) << endl;
-	if (TOKEN_CMP(*it, REG_TK_OP, '^')) {
-		if (verbose) grcc::cout << "beginnig operator found" << endl;
-		++it;
-		begin = true;
-		return true;
-
-	// Else detects the beginning of an union.
-	} else if (TOKEN_CMP(*it, REG_TK_OP, '(') ||
-		TOKEN_CMP(*it, REG_TK_OP, '[') ||
-		type == REG_TK_CHAR || type == REG_TK_ESC) {
-		begin = false;
-		return true;
-	} 
-
-	// Error detected.
-	grcc::cerr << "(op: '^'), (op: '('), (op: '[') or a litteral was expected, not " << stringFromToken(*it) << endl;
+	grcc::cerr << "skip sequence or EOE was expected, not " << stringFromToken(*it) << endl;
 	return false;
 
 }
@@ -1052,9 +985,8 @@ bool regexParseExpr(vector<int>::const_iterator &it, RegexTreeExpr &tree, bool v
 		tree = RegexTreeExpr();
 		RegexTreeUnion *union_node = new RegexTreeUnion();
 		tree.m_node = union_node;
-		if (!regexParseBegin(it, tree.m_begin, verbose) ||
-			!regexParseUnion(it, union_node, verbose) ||
-			!regexParseEnd(it, tree.m_end, verbose)) {
+		if (!regexParseUnion(it, union_node, verbose) ||
+			!regexParseEnd(it, tree.m_skip, tree.m_match, verbose)) {
 			grcc::cerr << "unable to parse the regex" << endl;
 			return false;
 		}
@@ -1065,7 +997,13 @@ bool regexParseExpr(vector<int>::const_iterator &it, RegexTreeExpr &tree, bool v
 			union_node->m_nodes.clear();
 			delete union_node;
 		}
-		return true;
+
+		// At this point the regex is valid if we found EOE.
+		if (TOKEN_CMP(*it, REG_TK_EOE, 0)) return true;
+		grcc::cerr << "EOE was expected, not " << stringFromToken(*it) << endl;
+		grcc::cerr << "unable to parse the regex" << endl;
+		return false;
+
 	}
 
 	// Error detected.

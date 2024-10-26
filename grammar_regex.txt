@@ -6,7 +6,6 @@ litt
 int
 skip
 ^
-.$
 |
 (
 )
@@ -22,7 +21,6 @@ skip
 
 %nonterminals
 Expr
-Begin
 End
 Union
 Concat
@@ -36,18 +34,15 @@ Elt
 Expr
 
 %rules
-Expr -> Begin Union End
-Begin -> ^
-Begin ->
-End -> .$
-End ->
+Expr -> Union End
+End -> 
+End -> skip Union )
 Union -> Concat
 Union -> Concat | Union
-Concat -> Atom
+Concat -> Atom 
 Concat -> Atom Concat
 Atom -> ( Union ) Quant
 Atom -> Letter Quant
-Atom -> ( skip Union )
 Quant -> +
 Quant -> *
 Quant -> ?

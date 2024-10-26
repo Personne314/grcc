@@ -64,8 +64,8 @@ public :
 	friend bool regexParseExpr(std::vector<int>::const_iterator &it, RegexTreeExpr &tree, bool verbose);
 private :
 	RegexTreeNode *m_node;
-	bool m_begin;
-	bool m_end;
+	RegexTreeNode *m_skip;
+	bool m_match;
 };
 
 // Node class used to represent an union.
@@ -78,8 +78,9 @@ public :
 	std::string to_string() const;
 	void print(int depth) const;
 	friend bool regexParseExpr(std::vector<int>::const_iterator &it, RegexTreeExpr &tree, bool verbose);
+	friend bool regexParseEnd(std::vector<int>::const_iterator &it, RegexTreeNode *&node, bool &match, bool verbose);
 	friend bool regexParseUnion(std::vector<int>::const_iterator &it, RegexTreeUnion *&node, bool verbose);
-	friend bool regexParseAtom1(std::vector<int>::const_iterator &it, RegexTreeAtom *&node, bool verbose);
+	friend bool regexParseAtom(std::vector<int>::const_iterator &it, RegexTreeAtom *&node, bool verbose);
 private :
 	std::vector<RegexTreeNode*> m_nodes;
 };

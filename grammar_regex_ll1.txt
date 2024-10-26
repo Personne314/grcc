@@ -1,12 +1,11 @@
 %name
 regex
 
-%terminals
+%terminals:
 litt
 int
 skip
 ^
-.$
 |
 (
 )
@@ -22,7 +21,6 @@ skip
 
 %nonterminals
 Expr
-Begin
 End
 Union
 Concat
@@ -33,7 +31,6 @@ Class
 Elt
 Union_1
 Concat_1
-Atom_1
 Quant_1
 Quant_2
 Letter_1
@@ -44,15 +41,13 @@ Elt_1
 Expr
 
 %rules
-Expr -> Begin Union End
-Begin -> 
-Begin -> ^
+Expr -> Union End
 End -> 
-End -> .$
+End -> skip Union )
 Union -> Concat Union_1
 Concat -> Atom Concat_1
-Atom -> ( Atom_1
 Atom -> Letter Quant
+Atom -> ( Union ) Quant
 Quant -> 
 Quant -> +
 Quant -> *
@@ -66,8 +61,6 @@ Union_1 ->
 Union_1 -> | Union
 Concat_1 -> 
 Concat_1 -> Concat
-Atom_1 -> skip Union )
-Atom_1 -> Union ) Quant
 Quant_1 -> }
 Quant_1 -> int }
 Quant_2 -> }

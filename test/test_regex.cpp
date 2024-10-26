@@ -13,6 +13,10 @@ int main() {
 	
 	// Tests expressions that should be working.
 	RegexTreeExpr tree;
+	assert(regexParser(tree, "m"));
+	assert(!tree.to_string().compare("m"));
+	assert(regexParser(tree, "^[^^](?=a)"));
+	assert(!tree.to_string().compare("^[^^](?=a)"));
 	assert(regexParser(tree, "a{4,9}b{4,}"));
 	assert(!tree.to_string().compare("a{4,9}b{4,}"));
 	assert(regexParser(tree, "a|b"));
@@ -25,18 +29,17 @@ int main() {
 	assert(!tree.to_string().compare("[ae-g]{5}"));
 	assert(regexParser(tree, "[a\\n-g]"));
 	assert(!tree.to_string().compare("[a\\n-g]"));
-	assert(regexParser(tree, "^m$"));
-	assert(!tree.to_string().compare("^m$"));
 	assert(regexParser(tree, "ab(cd)"));
 	assert(!tree.to_string().compare("abcd"));
 	assert(regexParser(tree, "a|b|(c|d)"));
 	assert(!tree.to_string().compare("a|b|c|d"));
 
 	// Tests incorrect expressions. The error messages are expected
-	// and so discarded.
+	// and so discarded to not pollute the terminal.
 	std::streambuf* buf = cerr.rdbuf();
 	std::ofstream null_str("dev/null");
 	cerr.rdbuf(null_str.rdbuf());
+	assert(!regexParser(tree, "^[^^](?=a)m"));
 	assert(!regexParser(tree, "[ae-\\n]"));
 	assert(!regexParser(tree, "[ae-\\w]"));
 	assert(!regexParser(tree, "[a\\w-g]"));

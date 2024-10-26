@@ -304,6 +304,36 @@ src/regex.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_regex.dir/build.make CMakeFiles/test_regex.dir/src/regex.cpp.s
 .PHONY : src/regex.cpp.s
 
+src/state_machine.o: src/state_machine.cpp.o
+.PHONY : src/state_machine.o
+
+# target to build an object file
+src/state_machine.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/state_machine.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_grammar.dir/build.make CMakeFiles/test_grammar.dir/src/state_machine.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_regex.dir/build.make CMakeFiles/test_regex.dir/src/state_machine.cpp.o
+.PHONY : src/state_machine.cpp.o
+
+src/state_machine.i: src/state_machine.cpp.i
+.PHONY : src/state_machine.i
+
+# target to preprocess a source file
+src/state_machine.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/state_machine.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_grammar.dir/build.make CMakeFiles/test_grammar.dir/src/state_machine.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_regex.dir/build.make CMakeFiles/test_regex.dir/src/state_machine.cpp.i
+.PHONY : src/state_machine.cpp.i
+
+src/state_machine.s: src/state_machine.cpp.s
+.PHONY : src/state_machine.s
+
+# target to generate assembly for a file
+src/state_machine.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/grcc.dir/build.make CMakeFiles/grcc.dir/src/state_machine.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_grammar.dir/build.make CMakeFiles/test_grammar.dir/src/state_machine.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_regex.dir/build.make CMakeFiles/test_regex.dir/src/state_machine.cpp.s
+.PHONY : src/state_machine.cpp.s
+
 test/test_grammar.o: test/test_grammar.cpp.o
 .PHONY : test/test_grammar.o
 
@@ -377,6 +407,9 @@ help:
 	@echo "... src/regex.o"
 	@echo "... src/regex.i"
 	@echo "... src/regex.s"
+	@echo "... src/state_machine.o"
+	@echo "... src/state_machine.i"
+	@echo "... src/state_machine.s"
 	@echo "... test/test_grammar.o"
 	@echo "... test/test_grammar.i"
 	@echo "... test/test_grammar.s"

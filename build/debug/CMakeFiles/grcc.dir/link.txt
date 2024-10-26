@@ -1,1 +1,1 @@
-/usr/bin/c++ -g CMakeFiles/grcc.dir/src/grammar.cpp.o CMakeFiles/grcc.dir/src/main.cpp.o CMakeFiles/grcc.dir/src/regex.cpp.o -o grcc 
+/usr/bin/c++ -g CMakeFiles/grcc.dir/src/grammar.cpp.o CMakeFiles/grcc.dir/src/main.cpp.o CMakeFiles/grcc.dir/src/regex.cpp.o CMakeFiles/grcc.dir/src/state_machine.cpp.o -o grcc 

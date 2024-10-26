@@ -2,29 +2,17 @@
 This grammar is LL(1)
 Expr
 \--> litt :
-     \--> Expr -> Begin Union End
-\--> ^ :
-     \--> Expr -> Begin Union End
+     \--> Expr -> Union End
 \--> ( :
-     \--> Expr -> Begin Union End
+     \--> Expr -> Union End
 \--> [ :
-     \--> Expr -> Begin Union End
-
-Begin
-\--> litt :
-     \--> Begin -> 
-\--> ^ :
-     \--> Begin -> ^
-\--> ( :
-     \--> Begin -> 
-\--> [ :
-     \--> Begin -> 
+     \--> Expr -> Union End
 
 End
 \--> $ :
      \--> End -> 
-\--> .$ :
-     \--> End -> .$
+\--> skip :
+     \--> End -> skip Union )
 
 Union
 \--> litt :
@@ -46,7 +34,7 @@ Atom
 \--> litt :
      \--> Atom -> Letter Quant
 \--> ( :
-     \--> Atom -> ( Atom_1
+     \--> Atom -> ( Union ) Quant
 \--> [ :
      \--> Atom -> Letter Quant
 
@@ -55,7 +43,7 @@ Quant
      \--> Quant -> 
 \--> litt :
      \--> Quant -> 
-\--> .$ :
+\--> skip :
      \--> Quant -> 
 \--> | :
      \--> Quant -> 
@@ -82,7 +70,7 @@ Letter
 
 Class
 \--> litt :
-     \--> Class -> Elt List_1
+     \--> Class -> Elt Class_1
 
 Elt
 \--> litt :
@@ -91,7 +79,7 @@ Elt
 Union_1
 \--> $ :
      \--> Union_1 -> 
-\--> .$ :
+\--> skip :
      \--> Union_1 -> 
 \--> | :
      \--> Union_1 -> | Union
@@ -103,7 +91,7 @@ Concat_1
      \--> Concat_1 -> 
 \--> litt :
      \--> Concat_1 -> Concat
-\--> .$ :
+\--> skip :
      \--> Concat_1 -> 
 \--> | :
      \--> Concat_1 -> 
@@ -113,16 +101,6 @@ Concat_1
      \--> Concat_1 -> 
 \--> [ :
      \--> Concat_1 -> Concat
-
-Atom_1
-\--> litt :
-     \--> Atom_1 -> Union ) Quant
-\--> skip :
-     \--> Atom_1 -> skip Union )
-\--> ( :
-     \--> Atom_1 -> Union ) Quant
-\--> [ :
-     \--> Atom_1 -> Union ) Quant
 
 Quant_1
 \--> int :
@@ -142,11 +120,11 @@ Letter_1
 \--> ^ :
      \--> Letter_1 -> ^ Class ]
 
-List_1
+Class_1
 \--> litt :
-     \--> List_1 -> Class
+     \--> Class_1 -> Class
 \--> ] :
-     \--> List_1 -> 
+     \--> Class_1 -> 
 
 Elt_1
 \--> litt :
@@ -155,4 +133,4 @@ Elt_1
      \--> Elt_1 -> 
 \--> - :
      \--> Elt_1 -> - litt
-
+     

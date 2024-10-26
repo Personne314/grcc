@@ -3,6 +3,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/test_regex.dir/src/grammar.cpp.o.d"
   "CMakeFiles/test_regex.dir/src/regex.cpp.o"
   "CMakeFiles/test_regex.dir/src/regex.cpp.o.d"
+  "CMakeFiles/test_regex.dir/src/state_machine.cpp.o"
+  "CMakeFiles/test_regex.dir/src/state_machine.cpp.o.d"
   "CMakeFiles/test_regex.dir/test/test_regex.cpp.o"
   "CMakeFiles/test_regex.dir/test/test_regex.cpp.o.d"
   "test_regex"

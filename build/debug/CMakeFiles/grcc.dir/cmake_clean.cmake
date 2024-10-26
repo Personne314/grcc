@@ -5,6 +5,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/grcc.dir/src/main.cpp.o.d"
   "CMakeFiles/grcc.dir/src/regex.cpp.o"
   "CMakeFiles/grcc.dir/src/regex.cpp.o.d"
+  "CMakeFiles/grcc.dir/src/state_machine.cpp.o"
+  "CMakeFiles/grcc.dir/src/state_machine.cpp.o.d"
   "grcc"
   "grcc.pdb"
 )
