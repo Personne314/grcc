@@ -20,7 +20,7 @@ enum RegexTokenType : char {
 	REG_TK_CHAR,
 	REG_TK_ESC,
 	REG_TK_OP,
-	REG_TK_SKIP,
+	REG_TK_LOOKAHEAD,
 	REG_TK_INT,
 	REG_TK_EOE
 };
@@ -32,7 +32,7 @@ enum RegexLexerState : char {
 	REG_LEX_HEX_1,
 	REG_LEX_HEX_2,
 	REG_LEX_BRK,
-	REG_LEX_SKIP
+	REG_LEX_LOOKAHEAD
 };
 
 
@@ -53,8 +53,8 @@ string stringFromToken(int tk) {
 		str += "esc: "; break;
 	case REG_TK_OP:
 		str += "op: "; break;
-	case REG_TK_SKIP:
-		str += "skip: "; break;
+	case REG_TK_LOOKAHEAD:
+		str += "lookahead: "; break;
 	case REG_TK_INT:
 		str += "int: "; break;
 	case REG_TK_EOE:
@@ -183,21 +183,21 @@ bool regexLexerHex2(vector<int> &tokens, char c, RegexLexerState &state, size_t 
 	return res;
 }
 
-// Analyses the character following (? to detect skip structure.
-bool regexLexerSkip(vector<int> &tokens, char c, RegexLexerState &state, size_t pos) {
+// Analyses the character following (? to detect a lookahead.
+bool regexLexerLook(vector<int> &tokens, char c, RegexLexerState &state, size_t pos) {
 	if (c == '!' || c == '=') {
 		state = REG_LEX_NONE;
 		tokens.pop_back();
-		tokens.push_back(TOKEN_MAKE(REG_TK_SKIP, c, pos));
+		tokens.push_back(TOKEN_MAKE(REG_TK_LOOKAHEAD, c, pos));
 	} else return true;
 	return false;
 }
 
-// Analyses the character following ( to detect skip structure.
+// Analyses the character following ( to detect a lookahead.
 void regexLexerBrk(const string &str, int &val, vector<int> &tokens, 
 	char c, RegexLexerState &state, bool flags[3], int pos) {
 	state = REG_LEX_NONE;
-	if (c == '?') state = REG_LEX_SKIP;
+	if (c == '?') state = REG_LEX_LOOKAHEAD;
 	else regexLexerNone(str, val, tokens, c, state, flags, pos);
 }
 
@@ -240,8 +240,8 @@ bool regexLexer(const string &str, vector<int> &tokens) {
 		case REG_LEX_HEX_2:
 			if (regexLexerHex2(tokens, c, state, pos)) goto ERROR_UNKNOWN_HEX;
 			break;
-		case REG_LEX_SKIP:
-			if (regexLexerSkip(tokens, c, state, pos)) goto ERROR_UNKNOWN_SKIP;
+		case REG_LEX_LOOKAHEAD:
+			if (regexLexerLook(tokens, c, state, pos)) goto ERROR_UNKNOWN_LOOKAHEAD;
 			break;
 		case REG_LEX_BRK:
 			regexLexerBrk(str, val, tokens, c, state, flags, pos); 
@@ -267,9 +267,9 @@ ERROR_UNKNOWN_ESCAPE:
 	tokens.push_back(TOKEN_MAKE(0,0, pos));
 	grcc::cerr << "unknown escape sequence: '\\" << c << "'" << endl;
 	return false;
-ERROR_UNKNOWN_SKIP:
+ERROR_UNKNOWN_LOOKAHEAD:
 	tokens.push_back(TOKEN_MAKE(0,0, pos));
-	grcc::cerr << "unknown skip sequence: '(?" << c << "'" << endl;
+	grcc::cerr << "unknown lookahead: '(?" << c << "'" << endl;
 	return false;
 
 }
@@ -299,21 +299,21 @@ RegexTreeNode::RegexTreeNode() {}
 RegexTreeNode::~RegexTreeNode() {}
 
 // Node class that serves as the expression root.
-RegexTreeExpr::RegexTreeExpr() : m_node(nullptr), m_skip(nullptr), m_match(true) {}
+RegexTreeExpr::RegexTreeExpr() : m_node(nullptr), m_look(nullptr), m_match(true) {}
 RegexTreeExpr::~RegexTreeExpr() {
 	if (m_node) delete m_node;
-	if (m_skip) delete m_skip;
+	if (m_look) delete m_look;
 }
 RegexTreeType RegexTreeExpr::getType() const {return REG_TREE_EXPR;}
 string RegexTreeExpr::to_string() const {
 	return (m_node ? m_node->to_string() : "") + 
-	(m_skip ? ("(?" + string(m_match ? "=" : "!") + m_skip->to_string() + ")") : "");
+	(m_look ? ("(?" + string(m_match ? "=" : "!") + m_look->to_string() + ")") : "");
 }
 void RegexTreeExpr::print(int depth) const {
 	grcc::cout << BOLD << "Expr :" << RST << endl;
 	if (m_node) m_node->print(depth);
-	grcc::cout << BOLD << "Followed by (" << RST << (m_match ? "matching)" : "unmatching)") << endl;
-	if (m_skip) m_skip->print(depth);
+	grcc::cout << BOLD << "Followed by " << RST << (m_match ? "(matching)" : "(unmatching)") << endl;
+	if (m_look) m_look->print(depth);
 	else grcc::cout << BOLD << "None" << RST << endl;
 }
 
@@ -388,19 +388,6 @@ void RegexTreeAtom::print(int depth) const {
 	printPreIndent("Atom", depth);
 	if (m_node) m_node->print(depth+1);
 	if (m_quant) m_quant->print(depth+1);
-	printPostIndent(depth);
-}
-
-// Node class used to represent a skip sequence.
-RegexTreeSkip::RegexTreeSkip() : m_match(false), m_node(nullptr) {}
-RegexTreeSkip::~RegexTreeSkip() {if (m_node) delete m_node;}
-RegexTreeType RegexTreeSkip::getType() const {return REG_TREE_SKIP;}
-string RegexTreeSkip::to_string() const {
-	return (m_match ? "(?=" : "(?!") + m_node->to_string() + ")";
-}
-void RegexTreeSkip::print(int depth) const {
-	printPreIndent(string("Skip") + RST + " (" + string(m_match ? "match" : "unmatch") + ")", depth);	
-	if (m_node) m_node->print(depth+1);
 	printPostIndent(depth);
 }
 
@@ -480,7 +467,7 @@ bool regexParseUnion1(vector<int>::const_iterator &it, RegexTreeUnion *&node, bo
 	// Checks if it's the end of the recursive union.
 	if (verbose) grcc::cout << "searching for a recursive Union " << stringFromToken(*it) << endl;
 	if (TOKEN_CMP(*it, REG_TK_OP, ')') ||
-		type == REG_TK_EOE || type == REG_TK_SKIP) {
+		type == REG_TK_EOE || type == REG_TK_LOOKAHEAD) {
 		return true;
 
 	// Else checks if the recursion continue.
@@ -507,7 +494,7 @@ bool regexParseConcat1(vector<int>::const_iterator &it, RegexTreeConcat *&node, 
 	if (verbose) grcc::cout << "searching for a recursive Concat " << stringFromToken(*it) << ")" << endl;
 	if (TOKEN_CMP(*it, REG_TK_OP, '|') ||
 		TOKEN_CMP(*it, REG_TK_OP, ')') ||
-		type == REG_TK_EOE || type == REG_TK_SKIP) {
+		type == REG_TK_EOE || type == REG_TK_LOOKAHEAD) {
 		return true;
 
 	// Else checks if the recursion continue.
@@ -753,7 +740,7 @@ bool regexParseQuant(vector<int>::const_iterator &it, RegexTreeQuant *&node, boo
 		TOKEN_CMP(*it, REG_TK_OP, ')') ||
 		TOKEN_CMP(*it, REG_TK_OP, '[') ||
 		type == REG_TK_CHAR || type == REG_TK_ESC || 
-		type == REG_TK_EOE || type == REG_TK_SKIP) return true;
+		type == REG_TK_EOE || type == REG_TK_LOOKAHEAD) return true;
 	
 	// Matches the quantifier.
 	// + corresponds to at least one : [1..+oo[.
@@ -928,19 +915,19 @@ bool regexParseUnion(vector<int>::const_iterator &it, RegexTreeUnion *&node, boo
 
 }
 
-// Parses the ending skip sequence.
-bool regexParseEnd(vector<int>::const_iterator &it, RegexTreeNode *&node, bool &match, bool verbose) {
+// Parses the ending lookahead.
+bool regexParseLook(vector<int>::const_iterator &it, RegexTreeNode *&node, bool &match, bool verbose) {
 	char type, val; TOKEN_SPLIT(*it, type, val);
 	
 	// If it's the end of the regex, return.
-	if (verbose) grcc::cout << "parsing an End " << stringFromToken(*it) << endl;
+	if (verbose) grcc::cout << "parsing a lookahead " << stringFromToken(*it) << endl;
 	if (type == REG_TK_EOE) return true;
-	else if (type == REG_TK_SKIP) {
+	else if (type == REG_TK_LOOKAHEAD) {
 		match = val == '=';
 		++it;
 
-		// Parse the content of the skip sequence.
-		if (verbose) grcc::cout << "a skip sequence was found " << stringFromToken(*it) << endl;
+		// Parse the content of the lookahead.
+		if (verbose) grcc::cout << "a lookahead was found " << stringFromToken(*it) << endl;
 		RegexTreeUnion *union_node = new RegexTreeUnion();
 		node = union_node;
 		if (!regexParseUnion(it, union_node, verbose)) return false;
@@ -963,7 +950,7 @@ bool regexParseEnd(vector<int>::const_iterator &it, RegexTreeNode *&node, bool &
 	}
 
 	// Error detected.
-	grcc::cerr << "skip sequence or EOE was expected, not " << stringFromToken(*it) << endl;
+	grcc::cerr << "lookahead or EOE was expected, not " << stringFromToken(*it) << endl;
 	return false;
 
 }
@@ -986,7 +973,7 @@ bool regexParseExpr(vector<int>::const_iterator &it, RegexTreeExpr &tree, bool v
 		RegexTreeUnion *union_node = new RegexTreeUnion();
 		tree.m_node = union_node;
 		if (!regexParseUnion(it, union_node, verbose) ||
-			!regexParseEnd(it, tree.m_skip, tree.m_match, verbose)) {
+			!regexParseLook(it, tree.m_look, tree.m_match, verbose)) {
 			grcc::cerr << "unable to parse the regex" << endl;
 			return false;
 		}

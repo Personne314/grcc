@@ -23,7 +23,7 @@ enum RegexTreeType : unsigned char {
 	REG_TREE_CONCAT,
 	REG_TREE_ATOM,
 	REG_TREE_QUANT,
-	REG_TREE_SKIP,
+	REG_TREE_LOOKAHEAD,
 	REG_TREE_CLASS,
 	REG_TREE_SEQ,
 	REG_TREE_LITT
@@ -64,7 +64,7 @@ public :
 	friend bool regexParseExpr(std::vector<int>::const_iterator &it, RegexTreeExpr &tree, bool verbose);
 private :
 	RegexTreeNode *m_node;
-	RegexTreeNode *m_skip;
+	RegexTreeNode *m_look;
 	bool m_match;
 };
 
@@ -78,7 +78,7 @@ public :
 	std::string to_string() const;
 	void print(int depth) const;
 	friend bool regexParseExpr(std::vector<int>::const_iterator &it, RegexTreeExpr &tree, bool verbose);
-	friend bool regexParseEnd(std::vector<int>::const_iterator &it, RegexTreeNode *&node, bool &match, bool verbose);
+	friend bool regexParseLook(std::vector<int>::const_iterator &it, RegexTreeNode *&node, bool &match, bool verbose);
 	friend bool regexParseUnion(std::vector<int>::const_iterator &it, RegexTreeUnion *&node, bool verbose);
 	friend bool regexParseAtom(std::vector<int>::const_iterator &it, RegexTreeAtom *&node, bool verbose);
 private :
@@ -130,20 +130,6 @@ public :
 private :
 	RegexTreeNode *m_node;
 	RegexTreeQuant *m_quant;
-};
-
-// Node class used to represent a skip sequence.
-class RegexTreeSkip : public RegexTreeNode {
-public :
-	RegexTreeSkip();
-	~RegexTreeSkip();
-	RegexTreeType getType() const;
-	std::string to_string() const;
-	void print(int depth) const;
-	friend bool regexParseAtom1(std::vector<int>::const_iterator &it, RegexTreeAtom *&node, bool verbose);
-private :
-	bool m_match;
-	RegexTreeNode *m_node;
 };
 
 // Node class used to represent an union.
